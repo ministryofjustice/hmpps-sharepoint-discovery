@@ -1,0 +1,15 @@
+---
+# Per environment values which override defaults in hmpps-sharepoint-discovery/values.yaml
+
+generic-prometheus-alerts:
+  alertSeverity: hmpps-sre-alerts-nonprod
+
+discoveryCronJob:
+  enabled: true
+  sharepoint_discovery_schedule: "00 08 * * 1-5"
+  env:
+    REDIS_MAX_STREAM_LENGTH: 360
+    LOG_LEVEL: debug
+  namespace_secrets:
+    hmpps-sharepoint-discovery:
+      SC_FILTER: "SC_FILTER"
