@@ -9,4 +9,3 @@ discoveryCronJob:
   sharepoint_discovery_schedule: "00 08 * * 1-5"
   env:
     LOG_LEVEL: debug
-
