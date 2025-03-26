@@ -50,14 +50,13 @@ def process_sc_teams(services, max_threads=10):
       if sp_team['name'].strip() != sc_team['attributes']['name'].strip():
         log_messages.append(f"Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}")
         log.info(f"Updating Team name :: t_id {t_id} :: {sc_team} -> {sp_team}")  
-        sc.update('teams', sc_team['id'], {"name": sp_team['name']})
+        sc.update('teams', sc_team['id'], sp_team)
         change_count += 1
     else:
       log_messages.append(f"Adding team :: {sp_team['name']}")
       log.info(f"Adding team :: {sp_team['name']}")
       sc.add('teams', sp_team)
       change_count += 1
-      log_messages.append(f"+ {sp_team}")
 
   for sc_team in sc_teams_data:
     t_id = sc_team['attributes']['t_id']

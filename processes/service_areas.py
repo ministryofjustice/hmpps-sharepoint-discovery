@@ -63,12 +63,12 @@ def process_sc_service_areas(services, max_threads=10):
             log.info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
             mismatch_flag = True
     if mismatch_flag:
-      sc.update('products', sc_service_area['id'], {sp_service_area})
+      sc.update('service-areas', sc_service_area['id'], sp_service_area)
       change_count += 1
     if sa_id not in sc_service_areas_dict:
       log_messages.append(f"Adding Service Area :: {sp_service_area}")
       log.info(f"Adding Service Area :: {sp_service_area}")
-      sc.add('products', sp_service_area)
+      sc.add('service-areas', sp_service_area)
       change_count += 1
 
   for sc_service_area in sc_service_areas_data:

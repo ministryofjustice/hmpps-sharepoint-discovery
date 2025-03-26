@@ -55,12 +55,12 @@ def process_sc_product_sets(services, max_threads=10):
       if sp_product_set['name'].strip() != sc_product_set['attributes']['name'].strip():
         log_messages.append(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}")
         log.info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set['attributes']['name']} to {sp_product_set['name']}")
-        # sc.update('product-sets', sc_product_set['id'], {"name": sp_product_set['name']})
+        sc.update('product-sets', sc_product_set['id'], sp_product_set)
         change_count += 1
     else:
       log_messages.append(f"Adding product set :: {sp_product_set['name']}")
       log.info(f"Adding product set {sp_product_set}") 
-      # sc.add('product-sets', sp_product_set)
+      sc.add('product-sets', sp_product_set)
       change_count += 1
 
   for sc_product_set in sc_product_sets_data:
@@ -68,7 +68,7 @@ def process_sc_product_sets(services, max_threads=10):
     if ps_id not in sp_product_sets_dict:
       log_messages.append(f"Unpublishing product set :: {sc_product_set}")
       log.info(f"Unpublishing product set :: {sc_product_set}")
-      # sc.unpublish('product-sets', sc_product_set['id'])
+      sc.unpublish('product-sets', sc_product_set['id'])
       change_count += 1
 
   log_messages.append(f"Product Set changed {change_count} in Service Catalogue") 
