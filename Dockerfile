@@ -22,6 +22,7 @@ RUN chown -R appuser:appgroup /app
 COPY --chown=appuser:appgroup --from=builder /home/appuser/.local /home/appuser/.local
 COPY classes classes
 COPY processes processes
+RUN chown -R appuser:appgroup /app/classes /app/processes
 COPY --chown=appuser:appgroup  ./sharepoint_discovery.py /app/sharepoint_discovery.py
 
 # update PATH environment variable
