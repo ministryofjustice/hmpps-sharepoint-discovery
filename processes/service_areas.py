@@ -18,10 +18,10 @@ def process_sc_service_areas(services, max_threads=10):
   sp = services.sp
   log = services.log
 
-  sc_service_area_data = sc.get_all_records(sc.service_areas_get)
-  log.info(f'Found {len(sc_service_area_data)} service areas in Service Catalogue before processing')
-  sp_service_areas = sp.get_sharepoint_lists('Service Areas','ServiceAreaID,ServiceArea')
-  sp_service_owner_data = sp.get_sharepoint_lists('Service Owners','ServiceOwnerLookupId')
+  sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
+  log.info(f'Found {len(sc_service_areas_data)} service areas in Service Catalogue before processing')
+  sp_service_areas = sp.get_sharepoint_lists('Service Areas')
+  sp_service_owner_data = sp.get_sharepoint_lists('Service Owners')
   # print(sp_service_owner_data)
   sp_service_onwers_dict = {service_owner['fields']['ServiceOwnerLookupId']: service_owner for service_owner in sp_service_owner_data['value']}
   log.info(f'Found {len(sp_service_areas["value"])} Service Areas in SharePoint...')
@@ -35,22 +35,50 @@ def process_sc_service_areas(services, max_threads=10):
         "sa_id": sp_service_area['fields']['ServiceAreaID'],
         "name": sp_service_area['fields']['ServiceArea'],
         "owner": service_owner,
-        "updated_by_id": None
+        "updated_by_id": 33
       }
     sp_service_areas_data.append(sp_service_area_data)
   # Create a dictionary for quick lookup of sc_service_area_data by t_id
-  sc_service_areas_dict = {product_set['attributes']['sa_id']: product_set for product_set in sc_service_area_data}
+  sc_service_areas_dict = {service_area['attributes']['sa_id']: service_area for service_area in sc_service_areas_data}
+  sp_service_areas_dict = {service_area['sa_id']: service_area for service_area in sp_service_areas_data}
+
   # Compare and update sp_service_area_data
+  change_count = 0
+  log_messages = []
+  log_messages.append("************** Processing Service Areas *********************")
   for sp_service_area in sp_service_areas_data:
     sa_id = sp_service_area['sa_id']
-    if sa_id in sc_service_areas_dict:
-      sc_service_area = sc_service_areas_dict[sa_id]
-      if sp_service_area['name'].strip() != sc_service_area['attributes']['name'].strip() or sp_service_area['owner'].strip() != sc_service_area['attributes']['owner'].strip():
-        log.info(f"SC Updating Service Areas for sa_id {sa_id} from {sc_service_area} to {sp_service_area}")
-        log.info("--------------------")
-        # sc.update('service-areas', sc_service_area['id'], {sp_service_area})
-    else:
-      log.info(f"Adding Service Area {sp_service_area['name']} to Service Catalogue")
-      log.info("--------------------")
-      # sc.add('service-areas', sp_service_area)
-    
+    sc_service_area = sc_service_areas_dict[sa_id]
+    mismatch_flag = False
+    for key in sp_service_area.keys():
+      compare_flag=False
+      if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area['attributes']:
+        compare_flag=True
+      if compare_flag and key!='updated_by_id':
+        sp_value = sp_service_area[key]
+        sc_value = sc_service_area['attributes'][key]
+        if sp_value is not None and sc_value is not None:
+          if sp_value.strip() != sc_value.strip():
+            log_messages.append(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
+            log.info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
+            mismatch_flag = True
+    if mismatch_flag:
+      sc.update('products', sc_service_area['id'], {sp_service_area})
+      change_count += 1
+    if sa_id not in sc_service_areas_dict:
+      log_messages.append(f"Adding Service Area :: {sp_service_area}")
+      log.info(f"Adding Service Area :: {sp_service_area}")
+      sc.add('products', sp_service_area)
+      change_count += 1
+
+  for sc_service_area in sc_service_areas_data:
+    sa_id = sc_service_area['attributes']['sa_id']
+    if sa_id not in sp_service_areas_dict and 'SP' not in sa_id:
+      log_messages.append(f"Unpublishing Service Area :: {sc_service_area}")
+      log.info(f"Unpublishing Service Area :: {sc_service_area}")
+      sc.unpublish('service-areas', sc_service_area['id'])
+      change_count += 1
+
+  log_messages.append(f"Service Areas processed {change_count} in Service Catalogue") 
+  log.info(f"Service Areas processed {change_count} in Service Catalogue")
+  return log_messages

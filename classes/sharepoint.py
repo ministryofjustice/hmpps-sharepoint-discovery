@@ -29,10 +29,7 @@ class SharePoint:
         }
     self.url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists'
     self.connection_ok = self.test_connection()
-    # self.list_data = self.get_sharepoint_lists('Teams','TeamID')
-    # self.list_data = self.get_sharepoint_lists('Product Set','ProductSetID')
-    # self.list_data = self.get_sharepoint_lists('Service Areas','ServiceAreaID')
-    # self.list_data = self.get_sharepoint_lists('Products and Teams Main List','ProductID')
+
   """
   Test connection to the Service Catalogue
   """
@@ -51,7 +48,7 @@ class SharePoint:
       self.log.critical(f'Unable to connect to Sharepoint - {e}')
       return False
     
-  def get_sharepoint_lists(self, list_name, select_fields):
+  def get_sharepoint_lists(self, list_name):
     if not self.lists_data:
         self.log.error("No lists data available. Please run test_connection first.")
         return None

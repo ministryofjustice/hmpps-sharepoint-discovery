@@ -35,7 +35,7 @@ class ServiceCatalogue:
     self.teams_get = f'teams'
     self.product_sets_get = f'product-sets'
     self.service_areas_get = f'service-areas'
-    self.products_get = f'products'
+    self.products_get = f'products?populate=*'
 
     self.connection_ok = self.test_connection()
 
@@ -182,6 +182,32 @@ class ServiceCatalogue:
       )
     return success
 
+  def unpublish(self, table, element_id):
+    success = False
+    try:
+      # self.log.debug(f'data to be unpublished: {json.dumps(data, indent=2)}')
+      data = {'publishedAt': None}
+      x = requests.put(
+        f'{self.url}/v1/{table}/{element_id}',
+        headers=self.api_headers,
+        json={'data': data},
+        timeout=10,
+      )
+      if x.status_code == 200:
+        self.log.info(
+          f'Successfully unpublished record {element_id} in {table.split("/")[-1]}: {x.status_code}'
+        )
+        success = True
+      else:
+        self.log.info(
+          f'Received non-200 response from service catalogue for record id {element_id} in {table.split("/")[-1]}: {x.status_code} {x.content}'
+        )
+    except Exception as e:
+      self.log.error(
+        f'Error updating service catalogue for record id {element_id} in {table.split("/")[-1]}: {e}'
+      )
+    return success
+  
   # eg get_id('github-teams', 'team_name', 'example')
   def get_id(self, match_table, match_field, match_string):
     try:

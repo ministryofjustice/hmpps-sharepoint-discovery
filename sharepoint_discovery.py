@@ -91,24 +91,32 @@ def main():
     services.slack.alert('*Sharepoint Discovery failed*: Unable to connect to Sharepoint Graph API')
     raise SystemExit()
 
-  # # Process Teams 
-  # log.info('Processing teams...')
-  # processed_teams = teams.process_sc_teams(services)
+  # Process Teams 
+  log.info('Processing teams...')
+  processed_teams = teams.process_sc_teams(services)
 
-  # # Process Product Sets
-  # log.info('Processing product sets ...')
-  # processed_product_sets = productSets.process_sc_product_sets(services)
+  # Process Product Sets
+  log.info('Processing product sets ...')
+  processed_product_sets = productSets.process_sc_product_sets(services)
 
-  # # Process Service areas
-  # log.info('Processing service areas...')
-  # processed_service_area = serviceAreas.process_sc_service_areas(services)
+  # Process Service areas
+  log.info('Processing service areas...')
+  processed_service_area = serviceAreas.process_sc_service_areas(services)
 
-  #Process products
+  # Process products
   log.info('Batch processing products...')
   processed_products = products.process_sc_products(services)
   
-  # create_summary(services, processed_components, processed_products, processed_teams)
-  # create_summary(services, processed_components, processed_products, force_update)
+  # # Combine output of all the processes
+  # processed_messages = []
+  # processed_messages.extend(processed_teams)
+  # processed_messages.extend(processed_product_sets)
+  # processed_messages.extend(processed_service_area)
+  # processed_messages.extend(processed_products)
+  # for message in processed_messages:
+  #   print(message)
+
+  # services.slack.notify('\n'.join(processed_messages))
 
 if __name__ == '__main__':
   main()
