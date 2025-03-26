@@ -6,7 +6,6 @@ generic-prometheus-alerts:
 
 discoveryCronJob:
   enabled: true
-  sharepoint_discovery_schedule: "*/40 8-17 * * 1-5"
+  sharepoint_discovery_schedule: "*/10 8-17 * * 1-5"
   env:
-    REDIS_MAX_STREAM_LENGTH: 1440
     LOG_LEVEL: info

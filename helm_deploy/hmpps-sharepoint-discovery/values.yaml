@@ -8,16 +8,14 @@ generic-prometheus-alerts:
   targetApplication: hmpps-sharepoint-discovery
 
 discoveryCronJob:
-  env:
-    sharepoint_DB_REPOSITORY: "public.ecr.aws/aquasecurity/sharepoint-db:2,ghcr.io/aquasecurity/sharepoint-db:2"
-    sharepoint_JAVA_DB_REPOSITORY: "public.ecr.aws/aquasecurity/sharepoint-java-db:1,ghcr.io/aquasecurity/sharepoint-java-db:1"
-    REDIS_TLS_ENABLED: "true"
-    REDIS_PORT: 6379
   namespace_secrets:
     hmpps-sharepoint-discovery:
+      AZ_TENANT_ID: "AZ_TENANT_ID"
+      SP_CLIENT_ID: "SP_CLIENT_ID"
+      SP_CLIENT_SECRET: "SP_CLIENT_SECRET"
+      SP_SITE_ID: "SP_SITE_ID"
       SERVICE_CATALOGUE_API_ENDPOINT: "SERVICE_CATALOGUE_API_ENDPOINT"
       SERVICE_CATALOGUE_API_KEY: "SERVICE_CATALOGUE_API_KEY"
       SLACK_BOT_TOKEN: "SLACK_BOT_TOKEN"
-    elasticache-redis:
-      REDIS_ENDPOINT: "primary_endpoint_address"
-      REDIS_TOKEN: "auth_token"
+      SLACK_NOTIFY_CHANNEL: "SLACK_NOTIFY_CHANNEL"
+      SLACK_ALERT_CHANNEL: "SLACK_ALERT_CHANNEL"
