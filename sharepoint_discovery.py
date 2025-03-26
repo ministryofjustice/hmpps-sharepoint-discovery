@@ -107,16 +107,14 @@ def main():
   log.info('Batch processing products...')
   processed_products = products.process_sc_products(services)
   
-  # # Combine output of all the processes
-  # processed_messages = []
-  # processed_messages.extend(processed_teams)
-  # processed_messages.extend(processed_product_sets)
-  # processed_messages.extend(processed_service_area)
-  # processed_messages.extend(processed_products)
-  # for message in processed_messages:
-  #   print(message)
+  # Combine output of all the processes
+  processed_messages = []
+  processed_messages.extend(processed_teams)
+  processed_messages.extend(processed_product_sets)
+  processed_messages.extend(processed_service_area)
+  processed_messages.extend(processed_products)
 
-  # services.slack.notify('\n'.join(processed_messages))
+  services.slack.notify('\n'.join(processed_messages))
 
 if __name__ == '__main__':
   main()
