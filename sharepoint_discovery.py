@@ -26,8 +26,6 @@ Optional environment variables
 import os
 import sys
 import logging
-venv_site_packages = os.path.join('/Users/sandhya.gandalwar/sre/new_sharepoint_discovery/venv/lib/python3.9/site-packages')
-sys.path.insert(0, venv_site_packages)
 
 # Classes for the various parts of the script
 # from classes.health import HealthServer
