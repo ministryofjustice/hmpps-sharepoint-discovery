@@ -2,4 +2,4 @@ requests==2.32.3
 pyyaml==6.0.1
 dockerfile-parse==2.0.1
 slack_sdk==3.31.0
-azure-identity==1.13.2
+azure-identity==1.21.0
