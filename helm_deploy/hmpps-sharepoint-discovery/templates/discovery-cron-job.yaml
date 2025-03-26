@@ -4,7 +4,7 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: hmpps-sharepoint-discovery-full
+  name: hmpps-sharepoint-discovery
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
