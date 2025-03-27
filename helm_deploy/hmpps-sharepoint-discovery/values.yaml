@@ -1,0 +1,21 @@
+---
+
+image:
+  repository: ghcr.io/ministryofjustice/hmpps-sharepoint-discovery
+  tag: latest
+  
+generic-prometheus-alerts:
+  targetApplication: hmpps-sharepoint-discovery
+
+discoveryCronJob:
+  namespace_secrets:
+    hmpps-sharepoint-discovery:
+      AZ_TENANT_ID: "AZ_TENANT_ID"
+      SP_CLIENT_ID: "SP_CLIENT_ID"
+      SP_CLIENT_SECRET: "SP_CLIENT_SECRET"
+      SP_SITE_ID: "SP_SITE_ID"
+      SERVICE_CATALOGUE_API_ENDPOINT: "SERVICE_CATALOGUE_API_ENDPOINT"
+      SERVICE_CATALOGUE_API_KEY: "SERVICE_CATALOGUE_API_KEY"
+      SLACK_BOT_TOKEN: "SLACK_BOT_TOKEN"
+      SLACK_NOTIFY_CHANNEL: "SLACK_NOTIFY_CHANNEL"
+      SLACK_ALERT_CHANNEL: "SLACK_ALERT_CHANNEL"

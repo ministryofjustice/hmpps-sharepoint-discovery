@@ -1,0 +1,11 @@
+---
+# Per environment values which override defaults in hmpps-sharepoint-discovery/values.yaml
+
+generic-prometheus-alerts:
+  alertSeverity: hmpps-sre-alerts-prod
+
+discoveryCronJob:
+  enabled: true
+  sharepoint_discovery_schedule: "*/10 8-17 * * 1-5"
+  env:
+    LOG_LEVEL: info
