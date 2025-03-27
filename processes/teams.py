@@ -66,7 +66,7 @@ def process_sc_teams(services, max_threads=10):
       sc.unpublish('teams', sc_team['id'])
       change_count += 1
 
-  log_messages.append(f"Teams changed {change_count} in Service Catalogue") 
-  log.info(f"Teams changed {change_count} in Service Catalogue")
+  log_messages.append(f"Teams processed {change_count} in Service Catalogue") 
+  log.info(f"Teams processed {change_count} in Service Catalogue")
   return log_messages
     

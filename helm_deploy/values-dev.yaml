@@ -6,6 +6,6 @@ generic-prometheus-alerts:
 
 discoveryCronJob:
   enabled: true
-  sharepoint_discovery_schedule: "00 08 * * 1-5"
+  sharepoint_discovery_schedule: "*/30 8-17 * * 1-5"
   env:
     LOG_LEVEL: debug
