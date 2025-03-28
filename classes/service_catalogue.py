@@ -36,6 +36,7 @@ class ServiceCatalogue:
     self.product_sets_get = f'product-sets'
     self.service_areas_get = f'service-areas'
     self.products_get = f'products?populate=*'
+    self.scheduled_jobs_get = f'scheduled-jobs?filters[name][$eq]=hmpps-sharepoint-discovery'
 
     self.connection_ok = self.test_connection()
 

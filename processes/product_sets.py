@@ -71,6 +71,6 @@ def process_sc_product_sets(services, max_threads=10):
       sc.unpublish('product-sets', sc_product_set['id'])
       change_count += 1
 
-  log_messages.append(f"Product Set changed {change_count} in Service Catalogue") 
-  log.info(f"Product Set changed {change_count} in Service Catalogue")
+  log_messages.append(f"Product Set processed {change_count} in Service Catalogue") 
+  log.info(f"Product Set processed {change_count} in Service Catalogue")
   return log_messages

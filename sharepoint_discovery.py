@@ -38,8 +38,10 @@ import processes.teams as teams
 import processes.product_sets as productSets
 import processes.service_areas as serviceAreas
 import processes.products as products
+import processes.update_sc_scheduled_jobs as update_sc_scheduled_job
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
+
 
 class Services:
   def __init__(self, sc_params, sp_params, slack_params, log):
@@ -47,6 +49,19 @@ class Services:
     self.sc = ServiceCatalogue(sc_params, log)
     self.sp = SharePoint(sp_params, log)
     self.log = log
+
+def should_send_slack_notification(processed_messages):
+  for message in processed_messages:
+    if "processed" in message:
+      parts = message.split("processed")
+      if len(parts) > 1:
+        try:
+          count = int(parts[1].split()[0])
+          if count > 0:
+            return True
+        except ValueError:
+          continue
+  return False  # All categories have 0 processed
 
 def main():
   logging.basicConfig(
@@ -76,7 +91,7 @@ def main():
     'notify_channel': os.getenv('SLACK_NOTIFY_CHANNEL', ''),
     'alert_channel': os.getenv('SLACK_ALERT_CHANNEL', ''),
   }
-
+  job_name = 'hmpps-sharepoint-discovery'
   services = Services(sc_params, sp_params, slack_params, log)
 
   # Send some alerts if there are service issues
@@ -88,31 +103,41 @@ def main():
   if not services.sp.connection_ok:
     services.slack.alert('*Sharepoint Discovery failed*: Unable to connect to Sharepoint Graph API')
     raise SystemExit()
+  try:
+    # Process Teams 
+    log.info('Processing teams...')
+    processed_teams = teams.process_sc_teams(services)
 
-  # Process Teams 
-  log.info('Processing teams...')
-  processed_teams = teams.process_sc_teams(services)
+    # Process Product Sets
+    log.info('Processing product sets ...')
+    processed_product_sets = productSets.process_sc_product_sets(services)
 
-  # Process Product Sets
-  log.info('Processing product sets ...')
-  processed_product_sets = productSets.process_sc_product_sets(services)
+    # Process Service areas
+    log.info('Processing service areas...')
+    processed_service_area = serviceAreas.process_sc_service_areas(services)
 
-  # Process Service areas
-  log.info('Processing service areas...')
-  processed_service_area = serviceAreas.process_sc_service_areas(services)
+    # Process products
+    log.info('Batch processing products...')
+    processed_products = products.process_sc_products(services)
+    
+    # Combine output of all the processes
+    processed_messages = []
+    processed_messages.extend(processed_teams)
+    processed_messages.extend(processed_product_sets)
+    processed_messages.extend(processed_service_area)
+    processed_messages.extend(processed_products)
 
-  # Process products
-  log.info('Batch processing products...')
-  processed_products = products.process_sc_products(services)
+    if should_send_slack_notification(processed_messages):
+      log.info("Sending Slack notification...")
+      services.slack.notify('\n'.join(processed_messages))
+    else:
+      log.info("No records processed, not sending Slack notification")
   
-  # Combine output of all the processes
-  processed_messages = []
-  processed_messages.extend(processed_teams)
-  processed_messages.extend(processed_product_sets)
-  processed_messages.extend(processed_service_area)
-  processed_messages.extend(processed_products)
-
-  services.slack.notify('\n'.join(processed_messages))
+    update_sc_scheduled_job.process_sc_scheduled_jobs(services, job_name,True)
+    log.info("SharePoint discovery job completed successfully.")
+  except Exception as e:
+    log.error(f"Sharepoint discovery job failed with error: {e}")
+    update_sc_scheduled_job(services, job_name, False)
 
 if __name__ == '__main__':
   main()
