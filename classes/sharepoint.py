@@ -2,6 +2,8 @@ import requests
 import logging
 import json
 from azure.identity import ClientSecretCredential
+import globals
+import utils.update_sc_scheduled_jobs as update_sc_scheduled_job
 
 class SharePoint:
   def __init__(self, params, log_level=logging.INFO):
@@ -50,33 +52,38 @@ class SharePoint:
     
   def get_sharepoint_lists(self, list_name):
     if not self.lists_data:
-        self.log.error("No lists data available. Please run test_connection first.")
-        return None
+      globals.error_messages.append(f"No Sharepoint lists data available. Please run test_connection first.")
+      self.log.error("No lists data available. Please run test_connection first.")
+      update_sc_scheduled_job.process_sc_scheduled_jobs(globals.services, globals.job_name, 'Failed', globals.error_messages)
+      raise SystemExit()
 
     try:
-        list_item = next((sp_list for sp_list in self.lists_data['value'] if sp_list['displayName'] == list_name), None)
-        if list_item:
-            list_id = list_item['id']
-            # Make a request to get fields metadata from the specified list
-            fields_url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/{list_id}/columns'
-            fields_response = requests.get(fields_url, headers=self.api_headers)
-            if fields_response.status_code == 200:
-                fields_data = fields_response.json()
-                # Filter out invalid field names
-                valid_field_names = [field['name'] for field in fields_data['value'] if 'name' in field]
-                select_fields = ','.join(valid_field_names)
-                # Make a request to get items from the specified list with all fields
-                items_url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/{list_id}/items?expand=fields'
-                items_response = requests.get(items_url, headers=self.api_headers)
-                if items_response.status_code == 200:
-                  items = items_response.json()
-                  return items
-                else:
-                    self.log.error(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
-            else:
-                self.log.error(f"Failed to retrieve fields metadata from {list_name} list: {fields_response.status_code} {fields_response.text}")
+      list_item = next((sp_list for sp_list in self.lists_data['value'] if sp_list['displayName'] == list_name), None)
+      if list_item:
+        list_id = list_item['id']
+        # Make a request to get fields metadata from the specified list
+        fields_url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/{list_id}/columns'
+        fields_response = requests.get(fields_url, headers=self.api_headers)
+        if fields_response.status_code == 200:
+          fields_data = fields_response.json()
+          # Filter out invalid field names
+          valid_field_names = [field['name'] for field in fields_data['value'] if 'name' in field]
+          select_fields = ','.join(valid_field_names)
+          # Make a request to get items from the specified list with all fields
+          items_url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/{list_id}/items?expand=fields'
+          items_response = requests.get(items_url, headers=self.api_headers)
+          if items_response.status_code == 200:
+            items = items_response.json()
+            return items
+          else:
+            self.log.error(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
+            globals.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
         else:
-            self.log.error(f"List {list_name} not found.")
+          self.log.error(f"Failed to retrieve fields metadata from {list_name} list: {fields_response.status_code} {fields_response.text}")
+          globals.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
+      else:
+        self.log.error(f"List {list_name} not found.")
+        globals.error_messages.append(f"List {list_name} not found.")
     except Exception as e:
-        self.log.critical(f'Unable to connect to Sharepoint - {e}')
-        return False
+      self.log.critical(f'Unable to connect to Sharepoint - {e}')
+      return False

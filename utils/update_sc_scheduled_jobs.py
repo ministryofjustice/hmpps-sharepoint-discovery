@@ -11,14 +11,18 @@ class Services:
     self.sc = ServiceCatalogue(sc_params, log)
     self.log = log
 
-def process_sc_scheduled_jobs(services, job_name, status):
+def process_sc_scheduled_jobs(services, job_name, status, error_message=None):
   sc = services.sc
   log = services.log
   sc_scheduled_jobs_data = sc.get_all_records(sc.scheduled_jobs_get)
   job_data = {
-    "last_run_successful": status,
-    "last_scheduled_run": datetime.now().isoformat()
+    "last_scheduled_run": datetime.now().isoformat(),
+    "result": status,
+    "error_details": error_message
   }
+  if status == 'Succeeded':
+    job_data["last_successful_run"] = datetime.now().isoformat()
+
   sc_scheduled_jobs_dict = {job['attributes']['name']: job for job in sc_scheduled_jobs_data}
   if job_name in sc_scheduled_jobs_dict:
     sc_scheduled_job = sc_scheduled_jobs_dict[job_name]

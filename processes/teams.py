@@ -7,6 +7,7 @@ from time import sleep
 from classes.slack import Slack
 from classes.service_catalogue import ServiceCatalogue
 from classes.sharepoint import SharePoint
+import globals
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
 
@@ -17,13 +18,16 @@ class Services:
     self.slack = Slack(slack_params, log)
     self.log = log
 
-def process_sc_teams(services, max_threads=10):
-  sc = services.sc
-  sp = services.sp
-  log = services.log
+def process_sc_teams(max_threads=10):
+  sc = globals.services.sc
+  sp = globals.services.sp
+  log = globals.services.log
 
   sc_teams_data = sc.get_all_records(sc.teams_get)
-  log.info(f'Service Catalogue teams before processing - {len(sc_teams_data)} ...')
+  if not sc_teams_data:
+    globals.error_messages.append(f'Errors occurred while fetching teams from Service Catalogue')
+  else:
+    log.info(f'Service Catalogue teams before processing - {len(sc_teams_data)} ...')
   sp_teams = sp.get_sharepoint_lists('Teams')
   log.info(f'Found {len(sp_teams["value"])} teams in SharePoint...')
   sp_teams_data = []
