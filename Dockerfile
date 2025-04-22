@@ -22,7 +22,8 @@ RUN chown -R appuser:appgroup /app
 COPY --chown=appuser:appgroup --from=builder /home/appuser/.local /home/appuser/.local
 COPY classes classes
 COPY processes processes
-RUN chown -R appuser:appgroup /app/classes /app/processes
+COPY utils utils
+RUN chown -R appuser:appgroup /app/classes /app/processes /app/utils
 COPY --chown=appuser:appgroup  ./globals.py /app/globals.py
 COPY --chown=appuser:appgroup  ./sharepoint_discovery.py /app/sharepoint_discovery.py
 
