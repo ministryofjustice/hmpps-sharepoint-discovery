@@ -21,7 +21,7 @@ spec:
         spec:
           containers:
             - name: hmpps-sharepoint-discovery
-              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              image: "{{ .Values.image.repository }}:{{ .Values.version }}"
               command: ["python", "-u", "/app/sharepoint_discovery.py", "-f"]
               env:
                 - name: PATH
