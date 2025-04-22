@@ -102,7 +102,7 @@ def main():
 
   if not globals.services.sp.connection_ok:
     globals.error_messages.append('Unable to connect to Sharepoint Graph API')
-    update_sc_scheduled_job.process_sc_scheduled_jobs(globals.services, globals.job_name, 'Failed', globals.error_messages)
+    update_sc_scheduled_job.process_sc_scheduled_jobs('Failed')
     globals.services.slack.alert('*Sharepoint Discovery failed*: Unable to connect to Sharepoint Graph API')
     raise SystemExit()
   
@@ -142,10 +142,10 @@ def main():
     log.error(f"Sharepoint discovery job failed with error: {e}")
 
   if globals.error_messages:
-    update_sc_scheduled_job.process_sc_scheduled_jobs(globals.services, globals.job_name,'Errors', globals.error_messages)
+    update_sc_scheduled_job.process_sc_scheduled_jobs('Errors')
     log.info("SharePoint discovery job completed  with errors.")
   else:
-    update_sc_scheduled_job.process_sc_scheduled_jobs(globals.services, globals.job_name, 'Succeeded', globals.error_messages)
+    update_sc_scheduled_job.process_sc_scheduled_jobs('Succeeded')
     log.info("SharePoint discovery job completed successfully.")
 
 if __name__ == '__main__':

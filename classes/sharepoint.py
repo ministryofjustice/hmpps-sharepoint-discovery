@@ -54,7 +54,7 @@ class SharePoint:
     if not self.lists_data:
       globals.error_messages.append(f"No Sharepoint lists data available. Please run test_connection first.")
       self.log.error("No lists data available. Please run test_connection first.")
-      update_sc_scheduled_job.process_sc_scheduled_jobs(globals.services, globals.job_name, 'Failed', globals.error_messages)
+      update_sc_scheduled_job.process_sc_scheduled_jobs('Failed')
       raise SystemExit()
 
     try:
