@@ -181,7 +181,10 @@ class ServiceCatalogue:
       self.log.error(
         f'Error adding a record to {table.split("/")[-1]} in service catalogue: {e}'
       )
-    return success
+    if success:
+      return x.json()
+    else:
+      return success
 
   def unpublish(self, table, element_id):
     success = False
