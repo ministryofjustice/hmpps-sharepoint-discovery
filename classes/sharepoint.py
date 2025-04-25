@@ -2,8 +2,8 @@ import requests
 import logging
 import json
 from azure.identity import ClientSecretCredential
-import globals
-import utils.update_sc_scheduled_jobs as update_sc_scheduled_job
+from utilities.discovery import job
+import processes.scheduled_jobs as sc_scheduled_job
 
 class SharePoint:
   def __init__(self, params, log_level=logging.INFO):
@@ -50,11 +50,11 @@ class SharePoint:
       self.log.critical(f'Unable to connect to Sharepoint - {e}')
       return False
     
-  def get_sharepoint_lists(self, list_name):
+  def get_sharepoint_lists(self, services, list_name):
     if not self.lists_data:
-      globals.error_messages.append(f"No Sharepoint lists data available. Please run test_connection first.")
+      job.error_messages.append(f"No Sharepoint lists data available. Please run test_connection first.")
       self.log.error("No lists data available. Please run test_connection first.")
-      update_sc_scheduled_job.process_sc_scheduled_jobs('Failed')
+      sc_scheduled_job.update(services,'Failed')
       raise SystemExit()
 
     try:
@@ -77,13 +77,13 @@ class SharePoint:
             return items
           else:
             self.log.error(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
-            globals.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
+            job.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
         else:
           self.log.error(f"Failed to retrieve fields metadata from {list_name} list: {fields_response.status_code} {fields_response.text}")
-          globals.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
+          job.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
       else:
         self.log.error(f"List {list_name} not found.")
-        globals.error_messages.append(f"List {list_name} not found.")
+        job.error_messages.append(f"List {list_name} not found.")
     except Exception as e:
       self.log.critical(f'Unable to connect to Sharepoint - {e}')
       return False
