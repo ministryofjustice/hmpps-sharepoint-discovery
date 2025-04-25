@@ -19,7 +19,7 @@ def update(services, status):
 
   try:
     job_id = sc_scheduled_jobs_data['id']
-    sc.update('scheduled-jobs', job_id, job_data)
+    sc.update(sc.scheduled_jobs, job_id, job_data)
     return True
   except Exception as e:
     log.error(f"Job {job.name} not found in Service Catalogue")
