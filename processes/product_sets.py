@@ -3,7 +3,7 @@ from time import sleep
 from classes.slack import Slack
 from classes.service_catalogue import ServiceCatalogue
 from classes.sharepoint import SharePoint
-import globals
+from utilities.discovery import job
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
 
@@ -14,18 +14,18 @@ class Services:
     self.slack = Slack(slack_params, log)
     self.log = log
 
-def process_sc_product_sets(max_threads=10):
-  sc = globals.services.sc
-  sp = globals.services.sp
-  log = globals.services.log
+def process_sc_product_sets(services, max_threads=10):
+  sc = services.sc
+  sp = services.sp
+  log = services.log
 
   sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
   if not sc_product_sets_data :
-    globals.error_messages.append(f'Errors occurred while fetching product sets from Service Catalogue')
+    job.error_messages.append(f'Errors occurred while fetching product sets from Service Catalogue')
   else:
     log.info(f'Found {len(sc_product_sets_data)} product sets in Service Catalogue before processing')
-  sp_product_sets = sp.get_sharepoint_lists('Product Set')
-  sp_lead_developer_data = sp.get_sharepoint_lists('Lead Developers')
+  sp_product_sets = sp.get_sharepoint_lists(services, 'Product Set')
+  sp_lead_developer_data = sp.get_sharepoint_lists(services, 'Lead Developers')
   sp_lead_developer_dict = {lead_developer['id']: lead_developer for lead_developer in sp_lead_developer_data['value']}
   log.info(f'Found {len(sp_product_sets["value"])} product sets in SharePoint...')
   sp_product_sets_data = []

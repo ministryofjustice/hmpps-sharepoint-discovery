@@ -38,8 +38,8 @@ import processes.teams as teams
 import processes.product_sets as productSets
 import processes.service_areas as serviceAreas
 import processes.products as products
-import utils.update_sc_scheduled_jobs as update_sc_scheduled_job
-import globals
+import processes.scheduled_jobs as sc_scheduled_job
+from utilities.discovery import job
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
 
@@ -92,36 +92,40 @@ def main():
     'notify_channel': os.getenv('SLACK_NOTIFY_CHANNEL', ''),
     'alert_channel': os.getenv('SLACK_ALERT_CHANNEL', ''),
   }
-  globals.services = Services(sc_params, sp_params, slack_params, log)
+  job.name = 'hmpps-sharepoint-discovery'
+  services = Services(sc_params, sp_params, slack_params, log)
+  sc = services.sc
+  slack = services.slack
+  sp = services.sp
 
   # Send some alerts if there are service issues
 
-  if not globals.services.sc.connection_ok:
-    globals.services.slack.alert('*Sharepoint Discovery failed*: Unable to connect to the Service Catalogue')
+  if not sc.connection_ok:
+    slack.alert('*Sharepoint Discovery failed*: Unable to connect to the Service Catalogue')
     raise SystemExit()
 
-  if not globals.services.sp.connection_ok:
-    globals.error_messages.append('Unable to connect to Sharepoint Graph API')
-    update_sc_scheduled_job.process_sc_scheduled_jobs('Failed')
-    globals.services.slack.alert('*Sharepoint Discovery failed*: Unable to connect to Sharepoint Graph API')
+  if not sp.connection_ok:
+    job.error_messages.append('Unable to connect to Sharepoint Graph API')
+    sc_scheduled_job.update(services, 'Failed')
+    slack.alert('*Sharepoint Discovery failed*: Unable to connect to Sharepoint Graph API')
     raise SystemExit()
   
   try:
     # Process Teams 
     log.info('Processing teams...')
-    processed_teams = teams.process_sc_teams()
+    processed_teams = teams.process_sc_teams(services)
 
     # Process Product Sets
     log.info('Processing product sets ...')
-    processed_product_sets = productSets.process_sc_product_sets()
+    processed_product_sets = productSets.process_sc_product_sets(services)
 
     # Process Service areas
     log.info('Processing service areas...')
-    processed_service_area = serviceAreas.process_sc_service_areas()
+    processed_service_area = serviceAreas.process_sc_service_areas(services)
 
     # Process products
     log.info('Batch processing products...')
-    processed_products = products.process_sc_products()
+    processed_products = products.process_sc_products(services)
     
     # Combine output of all the processes
     processed_messages = []
@@ -132,20 +136,20 @@ def main():
 
     if should_send_slack_notification(processed_messages):
       log.info("Sending Slack notification...")
-      globals.services.slack.notify('\n'.join(processed_messages))
+      slack.notify('\n'.join(processed_messages))
     else:
       log.info("No records processed, not sending Slack notification")
   
   except Exception as e:
-    globals.error_messages.append(f"Sharepoint discovery job failed with error: {e}")
-    globals.services.slack.alert(f"*Sharepoint Discovery failed*: {e}")
+    job.error_messages.append(f"Sharepoint discovery job failed with error: {e}")
+    slack.alert(f"*Sharepoint Discovery failed*: {e}")
     log.error(f"Sharepoint discovery job failed with error: {e}")
 
-  if globals.error_messages:
-    update_sc_scheduled_job.process_sc_scheduled_jobs('Errors')
+  if job.error_messages:
+    sc_scheduled_job.update(services, 'Errors')
     log.info("SharePoint discovery job completed  with errors.")
   else:
-    update_sc_scheduled_job.process_sc_scheduled_jobs('Succeeded')
+    sc_scheduled_job.update(services, 'Succeeded')
     log.info("SharePoint discovery job completed successfully.")
 
 if __name__ == '__main__':

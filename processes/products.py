@@ -5,7 +5,7 @@ import html
 from classes.slack import Slack
 from classes.service_catalogue import ServiceCatalogue
 from classes.sharepoint import SharePoint
-import globals
+from utilities.discovery import job
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
 
@@ -34,28 +34,28 @@ def fetchID(services, sp_product, dict, key):
   del sp_product[key]
   return sp_product
    
-def process_sc_products(max_threads=10):
-  sc = globals.services.sc
-  sp = globals.services.sp
-  log = globals.services.log
+def process_sc_products(services, max_threads=10):
+  sc = services.sc
+  sp = services.sp
+  log = services.log
 
   sc_products_data = sc.get_all_records(sc.products_get)
   if not sc_products_data:
-    globals.error_messages.append(f'Errors occurred while fetching products from Service Catalogue')
+    job.error_messages.append(f'Errors occurred while fetching products from Service Catalogue')
   else:
     log.info(f'Found {len(sc_products_data)} Products in Service Catalogue before processing')
-  sp_products = sp.get_sharepoint_lists('Products and Teams Main List')
+  sp_products = sp.get_sharepoint_lists(services, 'Products and Teams Main List')
   sc_teams_data = sc.get_all_records(sc.teams_get)
   sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
   sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
 
   # Lookup data for Teams, Product Set, Service Areas, Delivery Managers, Product Managers, Lead Developers
-  sp_teams_data = sp.get_sharepoint_lists('Teams')
-  sp_product_set_data = sp.get_sharepoint_lists('Product Set')
-  sp_service_area_data = sp.get_sharepoint_lists('Service Areas')
-  sp_delivery_manager_data = sp.get_sharepoint_lists('Delivery Managers')
-  sp_product_manager_data = sp.get_sharepoint_lists('Product Managers')
-  sp_lead_developer_data = sp.get_sharepoint_lists('Lead Developers')
+  sp_teams_data = sp.get_sharepoint_lists(services, 'Teams')
+  sp_product_set_data = sp.get_sharepoint_lists(services, 'Product Set')
+  sp_service_area_data = sp.get_sharepoint_lists(services, 'Service Areas')
+  sp_delivery_manager_data = sp.get_sharepoint_lists(services, 'Delivery Managers')
+  sp_product_manager_data = sp.get_sharepoint_lists(services, 'Product Managers')
+  sp_lead_developer_data = sp.get_sharepoint_lists(services, 'Lead Developers')
 
   # Create a dictionary for Sharepoint data for Teams, Product Set, Service Areas, Delivery Managers, Product Managers, Lead Developers
   sp_teams_dict = {team['id']: team for team in sp_teams_data['value']}
