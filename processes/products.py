@@ -28,10 +28,10 @@ def fetchID(services, sp_product, dict, key):
   if key in sp_product and sp_product[key] is not None:
     parent_key = sp_product[key]
     if parent_key in dict:
-      sp_product[key] = dict[sp_product[key]]['id']
+      sp_product[key] = dict[parent_key]['id']
     else:
       log.error(f"Product reference key not found for {key} in Service Catalogue :: {sp_product[key]}")
-  del sp_product[key]
+      del sp_product[key]
   return sp_product
    
 def process_sc_products(services, max_threads=10):
@@ -163,8 +163,8 @@ def process_sc_products(services, max_threads=10):
         "updated_by_id": 33
       }
 
-      if 'slackChannelId' in sp_product['fields'] and sp_product['fields']['slackChannelId'] is not None:
-        sp_product_data["slack_channel_id"] = sp_product['fields']['slackChannelId']
+      if 'SlackchannelID' in sp_product['fields'] and sp_product['fields']['SlackchannelID'] is not None:
+        sp_product_data["slack_channel_id"] = sp_product['fields']['SlackchannelID']
 
       sp_products_data.append(sp_product_data)
 
@@ -192,10 +192,10 @@ def process_sc_products(services, max_threads=10):
           else:
             sc_value=clean_value(sc_product['attributes'][key])
 
-          if sp_value is not None and sc_value is not None:
+          if sp_value is not None:
             if (sp_value or "").strip() != (sc_value or "").strip():
-              log_messages.append(f"SC Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}")
-              log.info(f"SC Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}")
+              log_messages.append(f"SC Updating Products p_id {p_id}({key}) :: {sc_value} -> {sp_value}")
+              log.info(f"SC Updating Products p_id {p_id}({key}) :: {sc_value} -> {sp_value}")
               mismatch_flag = True
             else:
               del sp_product[key]
@@ -212,6 +212,7 @@ def process_sc_products(services, max_threads=10):
         sp_product = fetchID(services, sp_product, sc_team_name_dict, "team") if 'team' in sp_product else sp_product
         sp_product = fetchID(services, sp_product, sc_product_set_name_dict, "product_set") if 'product_set' in sp_product else sp_product
         sp_product = fetchID(services, sp_product, sc_service_area_name_dict, "service_area") if 'service_area' in sp_product else sp_product
+        log.info(f"Updating Product :: p_id {p_id} :: {sc_product} -> {sp_product}")
         sc.update('products', sc_product['id'], sp_product)
         change_count += 1
     else:
