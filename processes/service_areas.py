@@ -39,7 +39,7 @@ def process_sc_service_areas(services, max_threads=10):
         "sa_id": sp_service_area['fields']['ServiceAreaID'],
         "name": sp_service_area['fields']['ServiceArea'],
         "owner": service_owner,
-        "updated_by_id": 33
+        "updated_by_id": 34
       }
     sp_service_areas_data.append(sp_service_area_data)
   # Create a dictionary for quick lookup of sc_service_area_data by t_id

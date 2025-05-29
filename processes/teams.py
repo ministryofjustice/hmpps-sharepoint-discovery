@@ -37,7 +37,7 @@ def process_sc_teams(services, max_threads=10):
         "name": sp_team['fields']['Team'],
         "description": "n/a",
         "slack_channel": "n/a",
-        "updated_by_id": 33
+        "updated_by_id": 34
       }
       sp_teams_data.append(sp_team_data)
   # Create a dictionary for quick lookup of sc_teams_data by t_id
