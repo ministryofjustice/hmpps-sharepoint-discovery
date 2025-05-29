@@ -41,7 +41,7 @@ def process_sc_product_sets(services, max_threads=10):
       "ps_id": sp_product_set['fields']['ProductSetID'],
       "name": sp_product_set['fields']['ProductSet'],
       "lead_developer": lead_developer,
-      "updated_by_id": 33
+      "updated_by_id": 34
     }
     sp_product_sets_data.append(sp_product_set_data)
   # Create a dictionary for quick lookup of sc_product_sets_data by t_id

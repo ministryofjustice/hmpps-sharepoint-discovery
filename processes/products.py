@@ -160,7 +160,7 @@ def process_sc_products(services, max_threads=10):
         "delivery_manager": delivery_manager,
         "product_manager": product_manager,
         "lead_developer": lead_developer,
-        "updated_by_id": 33
+        "updated_by_id": 34
       }
 
       if 'SlackchannelID' in sp_product['fields'] and sp_product['fields']['SlackchannelID'] is not None:
