@@ -26,7 +26,6 @@ def process_sc_service_areas(services, max_threads=10):
     log.info(f'Found {len(sc_service_areas_data)} service areas in Service Catalogue before processing')
   sp_service_areas = sp.get_sharepoint_lists(services, 'Service Areas')
   sp_service_owner_data = sp.get_sharepoint_lists(services, 'Service Owners')
-  # print(sp_service_owner_data)
   sp_service_onwers_dict = {service_owner['fields']['ServiceOwnerLookupId']: service_owner for service_owner in sp_service_owner_data['value']}
   log.info(f'Found {len(sp_service_areas["value"])} Service Areas in SharePoint...')
   sp_service_areas_data = []
@@ -52,24 +51,26 @@ def process_sc_service_areas(services, max_threads=10):
   log_messages.append("************** Processing Service Areas *********************")
   for sp_service_area in sp_service_areas_data:
     sa_id = sp_service_area['sa_id']
-    sc_service_area = sc_service_areas_dict[sa_id]
-    mismatch_flag = False
-    for key in sp_service_area.keys():
-      compare_flag=False
-      if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area['attributes']:
-        compare_flag=True
-      if compare_flag and key!='updated_by_id':
-        sp_value = sp_service_area[key]
-        sc_value = sc_service_area['attributes'][key]
-        if sp_value is not None and sc_value is not None:
-          if sp_value.strip() != sc_value.strip():
-            log_messages.append(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
-            log.info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
-            mismatch_flag = True
-    if mismatch_flag:
-      sc.update('service-areas', sc_service_area['id'], sp_service_area)
-      change_count += 1
-    if sa_id not in sc_service_areas_dict:
+    if sc_service_areas_dict.get(sa_id):
+      log.debug(f"Processing Service Area sa_id {sa_id} :: {sp_service_area}")
+      sc_service_area = sc_service_areas_dict[sa_id]
+      mismatch_flag = False
+      for key in sp_service_area.keys():
+        compare_flag=False
+        if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area['attributes']:
+          compare_flag=True
+        if compare_flag and key!='updated_by_id':
+          sp_value = sp_service_area[key]
+          sc_value = sc_service_area['attributes'][key]
+          if sp_value is not None and sc_value is not None:
+            if sp_value.strip() != sc_value.strip():
+              log_messages.append(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
+              log.info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
+              mismatch_flag = True
+      if mismatch_flag:
+        sc.update('service-areas', sc_service_area['id'], sp_service_area)
+        change_count += 1
+    else:
       log_messages.append(f"Adding Service Area :: {sp_service_area}")
       log.info(f"Adding Service Area :: {sp_service_area}")
       sc.add('service-areas', sp_service_area)

@@ -38,13 +38,14 @@ def process_sc_products(services, max_threads=10):
   sc = services.sc
   sp = services.sp
   log = services.log
-
+  
   sc_products_data = sc.get_all_records(sc.products_get)
   if not sc_products_data:
     job.error_messages.append(f'Errors occurred while fetching products from Service Catalogue')
   else:
     log.info(f'Found {len(sc_products_data)} Products in Service Catalogue before processing')
   sp_products = sp.get_sharepoint_lists(services, 'Products and Teams Main List')
+  log.info(f"Found {len(sp_products['value'])} Products in SharePoint...")
   sc_teams_data = sc.get_all_records(sc.teams_get)
   sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
   sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
@@ -82,14 +83,13 @@ def process_sc_products(services, max_threads=10):
   product_manager = None
   lead_developer = None
   for sp_product in sp_products["value"]:
-    not_decommisioned = True
-    if 'DecommissionedProduct' in sp_product['fields']:
-      if sp_product['fields']['DecommissionedProduct'] == "Yes":
-        not_decommisioned = False
-      else:
-        not_decommisioned = True
-      
+    if 'DecommissionedProduct' in sp_product['fields'] and sp_product.get('fields').get('DecommissionedProduct').upper() == 'YES':
+      not_decommisioned = False
+    else:
+      not_decommisioned = True
+
     if not_decommisioned:
+      product_id=sp_product['fields']['ProductID'].strip()
       parent = None
       team = None
       product_set = None
@@ -99,53 +99,58 @@ def process_sc_products(services, max_threads=10):
       product_manager = None
       lead_developer = None
       if not re.match(r'^.+$', sp_product['fields']['Product']):
-          return "Invalid name"
+        log.error(f"Invalid name format for product_id: {product_id}")
+
       if not re.match(r'^[A-Z]{3,4}[0-9]{0,5}$', sp_product['fields']['ProductID']):
-          return "Invalid productId"
+        log.error(f"Invalid productId format for product_id: {product_id}")
+
       if 'ProductType' in sp_product['fields']:
         subproductBool = True if sp_product['fields']['ProductType'] == "Subproduct" else False
+      else:
+        log.debug(f"Product Type not found for product_id: {product_id}")
+        subproductBool = False
+
       if 'ParentProductLookupId' in sp_product['fields']:
         parent_id = sp_product['fields']['ParentProductLookupId']
-        try:
-          parent = sp_product_dict[parent_id]['fields']['Product']
-        except KeyError:
-          parent = None
+        parent = sp_product_dict.get(parent_id, {}).get('fields', {}).get('Product')
+        if not parent:
+          log.debug(f"Parent product not found for product_id: {product_id}")
+
       if 'TeamLookupId' in sp_product['fields']:
         team_id = sp_product['fields']['TeamLookupId']
-        try:
-          team = sp_teams_dict[team_id]['fields']['Team']
-        except KeyError:
-          team = None
+        team = sp_teams_dict.get(team_id, {}).get('fields', {}).get('Team')
+        if not team:
+          log.debug(f"Team not found for product_id: {product_id}")
+
       if 'ProductSetLookupId' in sp_product['fields']:
         product_set_id = sp_product['fields']['ProductSetLookupId']
-        try:
-          product_set = sp_product_set_dict[product_set_id]['fields']['ProductSet']
-        except KeyError:
-          product_set = None        
+        product_set = sp_product_set_dict.get(product_set_id, {}).get('fields', {}).get('ProductSet')
+        if not product_set:
+          log.debug(f"Product Set not found for product_id: {product_id}")
+
       if 'ServiceAreaLookupId' in sp_product['fields']:
         service_area_id = sp_product['fields']['ServiceAreaLookupId']
-        try:
-          service_area = sp_service_area_dict[service_area_id]['fields']['ServiceArea']
-        except KeyError:
-          service_area = None
+        service_area = sp_service_area_dict.get(service_area_id, {}).get('fields', {}).get('ServiceArea')
+        if not service_area:
+          log.debug(f"Service Area not found for product_id: {product_id}")
+
       if 'DeliveryManagerLookupId' in sp_product['fields']:
         delivery_manager_id = sp_product['fields']['DeliveryManagerLookupId']
-        try:
-          delivery_manager = sp_delivery_manager_dict[delivery_manager_id]['fields']['DeliveryManagerName']
-        except KeyError:
-          delivery_manager = None
+        delivery_manager = sp_delivery_manager_dict.get(delivery_manager_id, {}).get('fields', {}).get('DeliveryManagerName')
+        if not delivery_manager:
+          log.debug(f"Delivery Manager not found for product_id: {product_id}")
+
       if 'ProductManagerLookupId' in sp_product['fields']:
         product_manager_id = sp_product['fields']['ProductManagerLookupId']
-        try:
-          product_manager = sp_product_manager_dict[product_manager_id]['fields']['ProductManagerName']
-        except KeyError:
-          product_manager = None
+        product_manager = sp_product_manager_dict.get(product_manager_id, {}).get('fields', {}).get('ProductManagerName')
+        if not product_manager:
+          log.debug(f"Product Manager not found for product_id: {product_id}")
+
       if 'LeadDeveloperLookupId' in sp_product['fields']:
         lead_developer_id = sp_product['fields']['LeadDeveloperLookupId']
-        try:
-          lead_developer = sp_lead_developer_dict[lead_developer_id]['fields']['Title']
-        except KeyError:
-          lead_developer = None
+        lead_developer = sp_lead_developer_dict.get(lead_developer_id, {}).get('fields', {}).get('Title')
+        if not lead_developer:
+          log.debug(f"Lead Developer not found for product_id: {product_id}")
 
       sp_product_data = {
         "p_id": sp_product['fields']['ProductID'].strip(),
@@ -163,8 +168,8 @@ def process_sc_products(services, max_threads=10):
         "updated_by_id": 34
       }
 
-      if 'SlackchannelID' in sp_product['fields'] and sp_product['fields']['SlackchannelID'] is not None:
-        sp_product_data["slack_channel_id"] = sp_product['fields']['SlackchannelID']
+      if slack_channel_id := sp_product.get('fields', {}).get('SlackchannelID'):
+          sp_product_data["slack_channel_id"] = slack_channel_id
 
       sp_products_data.append(sp_product_data)
 
