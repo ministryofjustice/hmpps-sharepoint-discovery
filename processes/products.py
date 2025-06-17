@@ -102,10 +102,10 @@ def process_sc_products(services, max_threads=10):
       lead_developer = None
       if not re.match(r'^.+$', sp_product['fields']['Product']):
         log.error(f"Invalid name format for product_id: {product_id}")
-        return "Invalid name"
+
       if not re.match(r'^[A-Z]{3,4}[0-9]{0,5}$', sp_product['fields']['ProductID']):
         log.error(f"Invalid productId format for product_id: {product_id}")
-        return "Invalid productId"
+
       if 'ProductType' in sp_product['fields']:
         subproductBool = True if sp_product['fields']['ProductType'] == "Subproduct" else False
       else:
