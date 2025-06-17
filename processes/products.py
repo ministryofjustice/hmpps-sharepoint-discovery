@@ -170,8 +170,7 @@ def process_sc_products(services, max_threads=10):
         "updated_by_id": 34
       }
 
-      slack_channel_id = sp_product.get('fields', {}).get('SlackchannelID')
-      if slack_channel_id is not None:
+      if slack_channel_id := sp_product.get('fields', {}).get('SlackchannelID'):
           sp_product_data["slack_channel_id"] = slack_channel_id
 
       sp_products_data.append(sp_product_data)
