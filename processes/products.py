@@ -83,12 +83,10 @@ def process_sc_products(services, max_threads=10):
   product_manager = None
   lead_developer = None
   for sp_product in sp_products["value"]:
-    not_decommisioned = True
-    if 'DecommissionedProduct' in sp_product['fields']:
-      if sp_product.get('fields').get('DecommissionedProduct').upper() == 'YES':
-        not_decommisioned = False
-      else:
-        not_decommisioned = True
+    if 'DecommissionedProduct' in sp_product['fields'] and sp_product.get('fields').get('DecommissionedProduct').upper() == 'YES':
+      not_decommisioned = False
+    else:
+      not_decommisioned = True
 
     if not_decommisioned:
       product_id=sp_product['fields']['ProductID'].strip()
