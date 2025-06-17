@@ -26,7 +26,6 @@ def process_sc_service_areas(services, max_threads=10):
     log.info(f'Found {len(sc_service_areas_data)} service areas in Service Catalogue before processing')
   sp_service_areas = sp.get_sharepoint_lists(services, 'Service Areas')
   sp_service_owner_data = sp.get_sharepoint_lists(services, 'Service Owners')
-  # print(sp_service_owner_data)
   sp_service_onwers_dict = {service_owner['fields']['ServiceOwnerLookupId']: service_owner for service_owner in sp_service_owner_data['value']}
   log.info(f'Found {len(sp_service_areas["value"])} Service Areas in SharePoint...')
   sp_service_areas_data = []

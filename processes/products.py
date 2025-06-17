@@ -45,7 +45,7 @@ def process_sc_products(services, max_threads=10):
   else:
     log.info(f'Found {len(sc_products_data)} Products in Service Catalogue before processing')
   sp_products = sp.get_sharepoint_lists(services, 'Products and Teams Main List')
-  print(f"Found {len(sp_products['value'])} Products in SharePoint...")
+  log.info(f"Found {len(sp_products['value'])} Products in SharePoint...")
   sc_teams_data = sc.get_all_records(sc.teams_get)
   sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
   sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
