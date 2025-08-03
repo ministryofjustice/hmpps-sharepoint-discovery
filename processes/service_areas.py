@@ -38,11 +38,11 @@ def process_sc_service_areas(services, max_threads=10):
         "sa_id": sp_service_area['fields']['ServiceAreaID'],
         "name": sp_service_area['fields']['ServiceArea'],
         "owner": service_owner,
-        "updated_by_id": 34
+        # "updated_by_id": 34 Not working in strapi5 
       }
     sp_service_areas_data.append(sp_service_area_data)
   # Create a dictionary for quick lookup of sc_service_area_data by t_id
-  sc_service_areas_dict = {service_area['attributes']['sa_id']: service_area for service_area in sc_service_areas_data}
+  sc_service_areas_dict = {service_area.get('sa_id'): service_area for service_area in sc_service_areas_data}
   sp_service_areas_dict = {service_area['sa_id']: service_area for service_area in sp_service_areas_data}
 
   # Compare and update sp_service_area_data
@@ -57,18 +57,18 @@ def process_sc_service_areas(services, max_threads=10):
       mismatch_flag = False
       for key in sp_service_area.keys():
         compare_flag=False
-        if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area['attributes']:
+        if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area:
           compare_flag=True
         if compare_flag and key!='updated_by_id':
           sp_value = sp_service_area[key]
-          sc_value = sc_service_area['attributes'][key]
+          sc_value = sc_service_area[key]
           if sp_value is not None and sc_value is not None:
             if sp_value.strip() != sc_value.strip():
               log_messages.append(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
               log.info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
               mismatch_flag = True
       if mismatch_flag:
-        sc.update('service-areas', sc_service_area['id'], sp_service_area)
+        sc.update('service-areas', sc_service_area.get('documentId'), sp_service_area)
         change_count += 1
     else:
       log_messages.append(f"Adding Service Area :: {sp_service_area}")
@@ -77,11 +77,11 @@ def process_sc_service_areas(services, max_threads=10):
       change_count += 1
 
   for sc_service_area in sc_service_areas_data:
-    sa_id = sc_service_area['attributes']['sa_id']
+    sa_id = sc_service_area.get('sa_id')
     if sa_id not in sp_service_areas_dict and 'SP' not in sa_id:
       log_messages.append(f"Unpublishing Service Area :: {sc_service_area}")
       log.info(f"Unpublishing Service Area :: {sc_service_area}")
-      sc.unpublish('service-areas', sc_service_area['id'])
+      sc.unpublish('service-areas', sc_service_area.get('documentId'))
       change_count += 1
 
   log_messages.append(f"Service Areas processed {change_count} in Service Catalogue") 

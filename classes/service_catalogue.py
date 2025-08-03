@@ -168,7 +168,7 @@ class ServiceCatalogue:
         json={'data': data},
         timeout=10,
       )
-      if x.status_code == 200:
+      if x.status_code == 201:
         self.log.info(
           f'Successfully added {(data["team_name"] if "team_name" in data else data["name"])} to {table.split("/")[-1]}: {x.status_code}'
         )
@@ -221,7 +221,7 @@ class ServiceCatalogue:
         timeout=10,
       )
       if r.status_code == 200 and r.json()['data']:
-        sc_id = r.json()['data'][0]['id']
+        sc_id = r.json()['data'][0]['documentId']
         self.log.debug(
           f'Successfully found Service Catalogue ID for {match_field}={match_string} in {match_table}: {sc_id}'
         )

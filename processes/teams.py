@@ -35,13 +35,13 @@ def process_sc_teams(services, max_threads=10):
       sp_team_data = {
         "t_id": sp_team['fields']['TeamID'],
         "name": sp_team['fields']['Team'],
-        "description": "n/a",
-        "slack_channel": "n/a",
-        "updated_by_id": 34
+        # "description": "n/a",  field not available in SC 
+        # "slack_channel": "n/a", Not populated so commenting out
+        # "updated_by_id": 34 Not working in strapi5 
       }
       sp_teams_data.append(sp_team_data)
   # Create a dictionary for quick lookup of sc_teams_data by t_id
-  sc_teams_dict = {team['attributes']['t_id']: team for team in sc_teams_data}
+  sc_teams_dict = {team.get('t_id'): team for team in sc_teams_data}
   sp_teams_dict = {team['t_id']: team for team in sp_teams_data}
   # Compare and update sp_teams_data
   change_count = 0  
@@ -51,10 +51,10 @@ def process_sc_teams(services, max_threads=10):
     t_id = sp_team['t_id']
     if t_id in sc_teams_dict:
       sc_team = sc_teams_dict[t_id]
-      if sp_team['name'].strip() != sc_team['attributes']['name'].strip():
+      if sp_team['name'].strip() != sc_team.get('name').strip():
         log_messages.append(f"Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}")
         log.info(f"Updating Team name :: t_id {t_id} :: {sc_team} -> {sp_team}")  
-        sc.update('teams', sc_team['id'], sp_team)
+        sc.update('teams', sc_team.get('documentId'), sp_team)
         change_count += 1
     else:
       log_messages.append(f"Adding team :: {sp_team['name']}")
@@ -63,11 +63,11 @@ def process_sc_teams(services, max_threads=10):
       change_count += 1
 
   for sc_team in sc_teams_data:
-    t_id = sc_team['attributes']['t_id']
+    t_id = sc_team.get('t_id')
     if t_id not in sp_teams_dict:
       log_messages.append(f"Unpublishing team :: {sc_team}")
       log.info(f"Unpublishing team :: {sc_team}")
-      sc.unpublish('teams', sc_team['id'])
+      sc.unpublish('teams', sc_team.get('documentId'))
       change_count += 1
 
   log_messages.append(f"Teams processed {change_count} in Service Catalogue") 

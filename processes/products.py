@@ -28,7 +28,7 @@ def fetchID(services, sp_product, dict, key):
   if key in sp_product and sp_product[key] is not None:
     parent_key = sp_product[key]
     if parent_key in dict:
-      sp_product[key] = dict[parent_key]['id']
+      sp_product[key] = dict[parent_key]['documentId']
     else:
       log.error(f"Product reference key not found for {key} in Service Catalogue :: {sp_product[key]}")
       del sp_product[key]
@@ -68,11 +68,11 @@ def process_sc_products(services, max_threads=10):
   sp_lead_developer_dict = {lead_developer['id']: lead_developer for lead_developer in sp_lead_developer_data['value']}
 
   # Create a dictionary for quick lookup of service catalogue data 
-  sc_products_dict = {product['attributes']['p_id'].strip(): product for product in sc_products_data}
-  sc_product_name_dict = {product['attributes']['name'].strip(): product for product in sc_products_data}
-  sc_team_name_dict = {team['attributes']['name'].strip(): team for team in sc_teams_data}
-  sc_product_set_name_dict = {product_set['attributes']['name'].strip(): product_set for product_set in sc_product_sets_data}
-  sc_service_area_name_dict = {service_area['attributes']['name'].strip(): service_area for service_area in sc_service_areas_data}
+  sc_products_dict = {product.get('p_id').strip(): product for product in sc_products_data}
+  sc_product_name_dict = {product.get('name').strip(): product for product in sc_products_data}
+  sc_team_name_dict = {team.get('name').strip(): team for team in sc_teams_data}
+  sc_product_set_name_dict = {product_set.get('name').strip(): product_set for product_set in sc_product_sets_data}
+  sc_service_area_name_dict = {service_area.get('name').strip(): service_area for service_area in sc_service_areas_data}
 
   sp_products_data = []
   parent = None
@@ -151,12 +151,10 @@ def process_sc_products(services, max_threads=10):
         lead_developer = sp_lead_developer_dict.get(lead_developer_id, {}).get('fields', {}).get('Title')
         if not lead_developer:
           log.debug(f"Lead Developer not found for product_id: {product_id}")
-
       sp_product_data = {
         "p_id": sp_product['fields']['ProductID'].strip(),
         "name": clean_value(sp_product['fields']['Product']),
         "subproduct": subproductBool,
-        "parent": parent,
         "description": clean_value(sp_product['fields']['Description_x0028_SourceData_x00']) if 'Description_x0028_SourceData_x00' in sp_product['fields'] else None,
         "team": team,
         "phase": sp_product['fields']['field_7'] if 'field_7' in sp_product['fields'] else None,
@@ -165,12 +163,13 @@ def process_sc_products(services, max_threads=10):
         "delivery_manager": delivery_manager,
         "product_manager": product_manager,
         "lead_developer": lead_developer,
-        "updated_by_id": 34
+        # "updated_by_id": 34 Not working in strapi5 
       }
 
       if slack_channel_id := sp_product.get('fields', {}).get('SlackchannelID'):
           sp_product_data["slack_channel_id"] = slack_channel_id
-
+      if parent is not None:
+          sp_product_data["parent"] = parent
       sp_products_data.append(sp_product_data)
 
   sp_products_dict = {product['p_id']: product for product in sp_products_data}
@@ -185,17 +184,18 @@ def process_sc_products(services, max_threads=10):
       mismatch_flag = False
       for key in list(sp_product.keys()):
         compare_flag=False
-        if key in sp_product and key in sc_product['attributes']:
+        if key in sp_product and key in sc_product:
           compare_flag=True
         if compare_flag and key!='updated_by_id' and key!='subproduct' and key!="p_id":
           sp_value = clean_value(sp_product[key])
+
           if key == 'parent' or key == 'team' or key == 'product_set' or key == 'service_area':
-            if sc_product['attributes'][key].get('data') and sc_product['attributes'][key]['data'].get('attributes'):
-              sc_value = clean_value(sc_product['attributes'][key]['data']['attributes']['name'])
+            if sc_product[key]:
+              sc_value = clean_value(sc_product[key]['name'])
             else:
               sc_value = None
           else:
-            sc_value=clean_value(sc_product['attributes'][key])
+            sc_value=clean_value(sc_product[key])
 
           if sp_value is not None:
             if (sp_value or "").strip() != (sc_value or "").strip():
@@ -206,7 +206,7 @@ def process_sc_products(services, max_threads=10):
               del sp_product[key]
           
         elif compare_flag and key=='subproduct':
-          if sp_product[key] != sc_product['attributes'][key]:
+          if sp_product[key] != sc_product[key]:
             log_messages.append(f"Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}")
             mismatch_flag = True
           else:
@@ -218,8 +218,10 @@ def process_sc_products(services, max_threads=10):
         sp_product = fetchID(services, sp_product, sc_product_set_name_dict, "product_set") if 'product_set' in sp_product else sp_product
         sp_product = fetchID(services, sp_product, sc_service_area_name_dict, "service_area") if 'service_area' in sp_product else sp_product
         log.info(f"Updating Product :: p_id {p_id} :: {sc_product} -> {sp_product}")
-        sc.update('products', sc_product['id'], sp_product)
+
+        sc.update('products', sc_product.get('documentId'), sp_product)
         change_count += 1
+    
     else:
       sp_product = fetchID(services, sp_product, sc_product_name_dict, "parent")
       sp_product = fetchID(services, sp_product, sc_team_name_dict, "team")
@@ -231,11 +233,11 @@ def process_sc_products(services, max_threads=10):
       change_count += 1
 
   for sc_product in sc_products_data:
-    p_id = sc_product['attributes']['p_id'].strip()
+    p_id = sc_product.get('p_id').strip()
     if p_id not in sp_products_dict and 'HMPPS' not in p_id and 'DPS999' not in p_id:
-      log_messages.append(f"Unpublishing product :: {sc_product['attributes']['p_id']}")
-      log.info(f"Unpublishing product  :: {sc_product['attributes']['p_id']}")
-      sc.unpublish('products', sc_product['id'])
+      log_messages.append(f"Unpublishing product :: {sc_product.get('p_id')}")
+      log.info(f"Unpublishing product  :: {sc_product.get('p_id')}")
+      sc.unpublish('products', sc_product.get('documentId'))
       change_count += 1
 
   log_messages.append(f"Products processed {change_count} in Service Catalogue") 

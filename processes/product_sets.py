@@ -30,6 +30,7 @@ def process_sc_product_sets(services, max_threads=10):
   log.info(f'Found {len(sp_product_sets["value"])} product sets in SharePoint...')
   sp_product_sets_data = []
   for sp_product_set in sp_product_sets["value"]:
+    lead_developer = None
     if 'LeadDeveloperLookupId' in sp_product_set['fields']:
       lead_developer_id = sp_product_set['fields']['LeadDeveloperLookupId']
       try:
@@ -41,13 +42,12 @@ def process_sc_product_sets(services, max_threads=10):
       "ps_id": sp_product_set['fields']['ProductSetID'],
       "name": sp_product_set['fields']['ProductSet'],
       "lead_developer": lead_developer,
-      "updated_by_id": 34
+      # "updated_by_id": 34 Not working in strapi5 
     }
     sp_product_sets_data.append(sp_product_set_data)
   # Create a dictionary for quick lookup of sc_product_sets_data by t_id
-  sc_product_sets_dict = {product_set['attributes']['ps_id']: product_set for product_set in sc_product_sets_data}
+  sc_product_sets_dict = {product_set.get('ps_id'): product_set for product_set in sc_product_sets_data}
   sp_product_sets_dict = {product_set['ps_id']: product_set for product_set in sp_product_sets_data}
-
   # Compare and update sp_product_set_data
   change_count = 0
   log_messages = []
@@ -56,10 +56,10 @@ def process_sc_product_sets(services, max_threads=10):
     ps_id = sp_product_set['ps_id']
     if ps_id in sc_product_sets_dict:
       sc_product_set = sc_product_sets_dict[ps_id]
-      if sp_product_set['name'].strip() != sc_product_set['attributes']['name'].strip():
+      if sp_product_set['name'].strip() != sc_product_set.get('name').strip() or sp_product_set['lead_developer'] != sc_product_set['lead_developer']:
         log_messages.append(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}")
-        log.info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set['attributes']['name']} to {sp_product_set['name']}")
-        sc.update('product-sets', sc_product_set['id'], sp_product_set)
+        log.info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} to {sp_product_set}")
+        sc.update('product-sets', sc_product_set.get('documentId'), sp_product_set)
         change_count += 1
     else:
       log_messages.append(f"Adding product set :: {sp_product_set['name']}")
@@ -68,11 +68,11 @@ def process_sc_product_sets(services, max_threads=10):
       change_count += 1
 
   for sc_product_set in sc_product_sets_data:
-    ps_id = sc_product_set['attributes']['ps_id']
+    ps_id = sc_product_set.get('ps_id')
     if ps_id not in sp_product_sets_dict:
       log_messages.append(f"Unpublishing product set :: {sc_product_set}")
       log.info(f"Unpublishing product set :: {sc_product_set}")
-      sc.unpublish('product-sets', sc_product_set['id'])
+      sc.unpublish('product-sets', sc_product_set.get('documentId'))
       change_count += 1
 
   log_messages.append(f"Product Set processed {change_count} in Service Catalogue") 
