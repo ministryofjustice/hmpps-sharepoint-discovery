@@ -20,11 +20,11 @@ def log_info(message: str):
   job.log.info(f"{message}")
 
 def log_error(error_message: str):
-  log_error(error_message)
+  job.error_messages.append(error_message)
   job.log.error(f"{error_message}")
 
 def log_critical(error_message: str):
-  log_error(error_message)
+  job.error_messages.append(error_message)
   job.log.critical(f"{error_message}")
 
 def log_warning(message: str):

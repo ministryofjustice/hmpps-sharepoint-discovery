@@ -36,146 +36,71 @@ def process_sc_products(services, max_threads=10):
   sc = services.sc
   sp = services.sp
   
-  sc_products_data = sc.get_all_records(sc.products_get)
-  if not sc_products_data:
-    log_error(f'Errors occurred while fetching products from Service Catalogue')
-  else:
+  log_info('Processing Products ')
+  try:
+    log_info("Fetching products from Service Catalogue")
+    sc_products_data = sc.get_all_records(sc.products_get)
     log_info(f'Found {len(sc_products_data)} Products in Service Catalogue before processing')
-  sp_products = sp.get_sharepoint_lists(services, 'Products and Teams Main List')
-  log_info(f"Found {len(sp_products.get('value'))} Products in SharePoint...")
-  sc_teams_data = sc.get_all_records(sc.teams_get)
-  sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
-  sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
+  except Exception as e:
+    log_error(f'Error fetching products from Service Catalogue: {e}, discontinuing processing products.py.')
+    return None
+  
+  try:
+    log_debug("Fetching Products from SharePoint")
+    sp_products = sp.get_sharepoint_lists(services, 'Products and Teams Main List')
+    log_info(f"Found {len(sp_products.get('value'))} Products in SharePoint")
+  except Exception as e:
+    log_error(f'Error fetching SharePoint products: {e}, discontinuing processing products.py.')
+    return None
+
+  try:
+    log_info("Fetching Teams, Products Sets, Service Areas from Service Catalogue")
+    sc_teams_data = sc.get_all_records(sc.teams_get)
+    sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
+    sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
+    log_info("Fetching Teams, Product Sets, Service Areas from Service Catalogue completed.")
+  except Exception as e:
+    log_error(f'Error fetching Teams, Product Sets, Service Areas from Service Catalogue: {e}, discontinuing processing products.py.')
+    return None
 
   # Lookup data for Teams, Product Set, Service Areas, Delivery Managers, Product Managers, Lead Developers
   try:
-    log_debug("Fetching SharePoint Teams data ...")
+    log_info("Fetching SharePoint Teams data ")
     sp_teams_data = sp.get_sharepoint_lists(services, 'Teams')
-  except Exception as e:
-    log_critical("Failed to fetch Teams data from SharePoint. Please check the SharePoint list name.")
-    sp_teams_data = {'value': []}
-  
-  try:
-    log_debug("Fetching SharePoint Product Sets data ...")
+    log_info("Fetching SharePoint Product Set data ")
     sp_product_set_data = sp.get_sharepoint_lists(services, 'Product Set')
-  except Exception as e:
-    log_critical("Failed to fetch Product Set data from SharePoint. Please check the SharePoint list name.")
-    sp_product_set_data = {'value': []}
-  
-  try:
-    log_debug("Fetching SharePoint Service Areas data ...")
+    log_info("Fetching SharePoint Service Area data ")
     sp_service_area_data = sp.get_sharepoint_lists(services, 'Service Areas')
-  except Exception as e:
-    log_critical("Failed to fetch Service Area data from SharePoint. Please check the SharePoint list name.")
-    sp_service_area_data = {'value': []}
-
-  try:
-    log_debug("Fetching SharePoint Delivery Manager data ...")
+    log_info("Fetching SharePoint Delivery Managers data ")
     sp_delivery_manager_data = sp.get_sharepoint_lists(services, 'Delivery Managers')
-  except Exception as e:
-    log_critical("Failed to fetch Delivery Managers data from SharePoint. Please check the SharePoint list name.")
-    sp_delivery_manager_data = {'value': []}
-
-  try:
+    log_info("Fetching SharePoint Product Managers data ")
     sp_product_manager_data = sp.get_sharepoint_lists(services, 'Product Managers')
-  except Exception as e:
-    log_critical("Failed to fetch Product Managers data from SharePoint. Please check the SharePoint list name.")
-    sp_product_manager_data = {'value': []}
-  
-  try:
+    log_info("Fetching SharePoint Lead Developers data ")
     sp_lead_developer_data = sp.get_sharepoint_lists(services, 'Lead Developers')
   except Exception as e:
-    log_critical("Failed to fetch Lead Developers data from SharePoint. Please check the SharePoint list name.")
-    sp_lead_developer_data = {'value': []}
-
-  log_info("Creating lookup dictionaries for SharePoint data...")
+    log_error("Failed to fetch SharePoint data. Please check the SharePoint list names above, discontinuing processing products.py.")
+    return None
+  
   try:
-    log_debug("Creating SharePoint Teams dictionary for quick lookup...")
+    log_info("Creating SharePoint dictionaries for quick lookup")
     sp_teams_dict = {team.get('id'): team for team in sp_teams_data.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Teams data from SharePoint. Please check the SharePoint list name.")
-    sp_teams_dict = {}
-  
-  try:
-    log_debug("Creating SharePoint Product Set dictionary for quick lookup...")
     sp_product_set_dict = {product_set.get('id'): product_set for product_set in sp_product_set_data.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Product Set data from SharePoint. Please check the SharePoint list name.")
-    sp_product_set_dict = {}
-
-  try:
-    log_debug("Creating SharePoint Service Area dictionary for quick lookup...")
     sp_service_area_dict = {service_area.get('id'): service_area for service_area in sp_service_area_data.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Service Area data from SharePoint. Please check the SharePoint list name.")
-    sp_service_area_dict = {}
-
-  try:
-    log_debug("Creating SharePoint Products dictionary for quick lookup...")
     sp_product_dict = {product.get('id'): product for product in sp_products.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Products data from SharePoint. Please check the SharePoint list name.")
-    sp_product_dict = {}
-
-  try:
-    log_debug("Creating SharePoint Delivery Managers dictionary for quick lookup...")
     sp_delivery_manager_dict = {delivery_manager.get('id'): delivery_manager for delivery_manager in sp_delivery_manager_data.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Delivery Managers data from SharePoint. Please check the SharePoint list name.")
-    sp_delivery_manager_dict = {}
-  
-  try:
-    log_debug("Creating SharePoint Product Managers dictionary for quick lookup...")
     sp_product_manager_dict = {product_manager.get('id'): product_manager for product_manager in sp_product_manager_data.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Product Managers data from SharePoint. Please check the SharePoint list name.")
-    sp_product_manager_dict = {}
-
-  try:
-    log_debug("Creating SharePoint Lead Developers dictionary for quick lookup...")
     sp_lead_developer_dict = {lead_developer.get('id'): lead_developer for lead_developer in sp_lead_developer_data.get('value')}
-  except Exception as e:
-    log_critical("Failed to fetch Lead Developers data from SharePoint. Please check the SharePoint list name.")
-    sp_lead_developer_dict = {}
-  log_info("Creating dictionaries for SharePoint data completed...")
-
-  log_info("creating Service catalogue dictionaries for quick lookup...")
-  try:
-    log_debug("Creating Service Catalogue Products p_id dictionary for quick lookup...")
+    log_info("Creating SharePoint dictionaries for quick lookup completed")
+    log_info("Creating Service Catalogue dictionaries for quick lookup")
     sc_products_dict = {product.get('attributes').get('p_id').strip(): product for product in sc_products_data}
-  except Exception as e:
-    log_critical("Failed to fetch Products data from Service Catalogue. Please check the Service Catalogue API.")
-    sc_products_dict = {}
-
-  try:
-    log_debug("Creating Service Catalogue Product names dictionary for quick lookup...")
     sc_product_name_dict = {product.get('attributes').get('name').strip(): product for product in sc_products_data}
-  except Exception as e:
-    log_critical("Failed to fetch Products names from Service Catalogue. Please check the Service Catalogue API.")
-    sc_product_name_dict = {}
-
-  try:
-    log_debug("Creating Service Catalogue Team names dictionary for quick lookup...")
     sc_team_name_dict = {team.get('attributes').get('name').strip(): team for team in sc_teams_data}
-  except:
-    log_critical("Failed to fetch Teams names from Service Catalogue. Please check the Service Catalogue API.")
-    sc_team_name_dict = {}
-
-  try:
-    log_debug("Creating Service Catalogue Product Sets name dictionary for quick lookup...")
     sc_product_set_name_dict = {product_set.get('attributes').get('name').strip(): product_set for product_set in sc_product_sets_data}
-  except Exception as e:
-    log_critical("Failed to fetch Product Sets names from Service Catalogue. Please check the Service Catalogue API.")
-    sc_product_set_name_dict = {}
-
-  try:
-    log_debug("Creating Service Catalogue Service Areas name dictionary for quick lookup...")
     sc_service_area_name_dict = {service_area.get('attributes').get('name').strip(): service_area for service_area in sc_service_areas_data}
+    log_info("Creating Service Catalogue dictionaries for quick lookup completed")
   except Exception as e:
-    log_critical("Failed to fetch Service Areas names from Service Catalogue. Please check the Service Catalogue API.")
-    sc_service_area_name_dict = {}
-
-  log_info("Creating service catalogue dictionaries for quick lookup completed...")
+    log_error("Dictionary lookup creation failed. Discontinuing processing products.py.")
+    return None 
 
   sp_products_data = []
   parent = None
@@ -212,7 +137,6 @@ def process_sc_products(services, max_threads=10):
         if sp_product.get('fields', {}).get('ProductType') == "Subproduct":
           subproductBool = True
         else:
-          log_debug(f"Product Type not found for product_id: {product_id}")
           subproductBool = False
 
         if parent_id := sp_product.get('fields', {}).get('ParentProductLookupId', None):
@@ -220,49 +144,49 @@ def process_sc_products(services, max_threads=10):
             parent = sp_product_dict.get(parent_id).get('fields').get('Product')
           except Exception as e:
             parent = None
-            log_warning(f"Parent product not found for product_id: {product_id}")
+            log_error(f"Parent product not found for product_id: {product_id}")
 
         if team_id := sp_product.get('fields', {}).get('TeamLookupId', None):
           try:
             team = sp_teams_dict.get(team_id).get('fields').get('Team')
           except Exception as e:
             team = None
-            log_warning(f"Team not found for product_id: {product_id}")
+            log_error(f"Team not found for product_id: {product_id}")
 
         if product_set_id := sp_product.get('fields', {}).get('ProductSetLookupId', None):
           try:
             product_set = sp_product_set_dict.get(product_set_id).get('fields').get('ProductSet')
           except Exception as e:
             product_set = None
-            log_warning(f"Product Set not found for product_id: {product_id}")
+            log_error(f"Product Set not found for product_id: {product_id}")
 
         if service_area_id := sp_product.get('fields', {}).get('ServiceAreaLookupId', None):
           try:
             service_area = sp_service_area_dict.get(service_area_id).get('fields').get('ServiceArea')
           except Exception as e:
             service_area = None
-            log_warning(f"Service Area not found for product_id: {product_id}")
+            log_error(f"Service Area not found for product_id: {product_id}")
 
         if delivery_manager_id := sp_product.get('fields', {}).get('DeliveryManagerLookupId', None):
           try:
             delivery_manager = sp_delivery_manager_dict.get(delivery_manager_id).get('fields').get('DeliveryManagerName')
           except Exception as e:
             delivery_manager = None
-            log_debug(f"Delivery Manager not found for product_id: {product_id}")
+            log_error(f"Delivery Manager not found for product_id: {product_id}")
 
         if  product_manager_id := sp_product.get('fields', {}).get('ProductManagerLookupId', None):
           try:
             product_manager = sp_product_manager_dict.get(product_manager_id, {}).get('fields', {}).get('ProductManagerName')
           except Exception as e:
             product_manager = None
-            log_debug(f"Product Manager not found for product_id: {product_id}")
+            log_error(f"Product Manager not found for product_id: {product_id}")
 
         if lead_developer_id := sp_product.get('fields', {}).get('LeadDeveloperLookupId', None):
           try:
             lead_developer = sp_lead_developer_dict.get(lead_developer_id, {}).get('fields', {}).get('Title', None)
           except Exception as e:
             lead_developer = None
-            log_debug(f"Lead Developer not found for product_id: {product_id}")
+            log_error(f"Lead Developer not found for product_id: {product_id}")
 
         sp_product_data = {
           "p_id": product_id,
@@ -281,17 +205,17 @@ def process_sc_products(services, max_threads=10):
           "updated_by_id": 34
         }
         sp_products_data.append(sp_product_data)
-  log_info(f"Found {len(sp_products_data)} Products in SharePoint after processing...")
+  log_info(f"Found {len(sp_products_data)} Products in SharePoint after processing")
 
   sp_products_dict = {product.get('p_id'): product for product in sp_products_data}
   # Compare and update sp_product_data
-  log_info("Processing prepared products sharepoint data for service catalogue ...")
+  log_info("Processing prepared products sharepoint data for service catalogue ")
   change_count = 0 
   log_messages = []
   log_messages.append("************** Processing Products *********************")
   for sp_product in sp_products_data:
     p_id = sp_product.get('p_id')
-    log_debug(f"Processing Product p_id {p_id} :: {sp_product}")
+    log_debug(f"Comparing Product p_id {p_id} :: {sp_product}")
     if p_id in sc_products_dict:
       try:
         sc_product = sc_products_dict.get(p_id)

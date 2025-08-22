@@ -15,35 +15,40 @@ def process_sc_product_sets(services, max_threads=10):
   sc = services.sc
   sp = services.sp
 
-  log_info('Processing Product Sets ...')
+  log_info('Processing Product Sets ')
   try:
-    log_debug('Fetching product sets from Service Catalogue...')
+    log_info('Fetching product sets from Service Catalogue')
     sc_product_sets_data = sc.get_all_records(sc.product_sets_get)
+    log_info(f'Found {len(sc_product_sets_data)} product sets in Service Catalogue')
   except Exception as e:
-    log_error(f'Error fetching product sets from Service Catalogue: {e}')
+    log_error(f'Error fetching product sets from Service Catalogue: {e}, discontinuing processing product_sets.py')
+    return None
   
   try:
-    log_debug('Fetching product sets from SharePoint...')
+    log_info('Fetching product sets from SharePoint')
     sp_product_sets = sp.get_sharepoint_lists(services, 'Product Set')
+    log_info(f'Found {len(sp_product_sets.get('value'))} product sets in SharePoint')
   except Exception as e:
-    log_error(f'Error fetching SharePoint product sets: {e}')
-    return []
+    log_error(f'Error fetching SharePoint product sets: {e}, discontinuing processing product_sets.py')
+    return None
 
   try:
-    log_debug('Fetching lead developers from SharePoint...')
+    log_info('Fetching lead developers from SharePoint')
     sp_lead_developer_data = sp.get_sharepoint_lists(services, 'Lead Developers')
   except Exception as e:
     log_error(f'Error fetching SharePoint lead developers: {e}')
-    return []
+    return None
   
   try:
-    log_debug('Creating SharePoint lead developer dictionary...')
+    log_info('Creating Lookup dictionaries ')
     sp_lead_developer_dict = {lead_developer.get('id'): lead_developer for lead_developer in sp_lead_developer_data.get('value')}
+    sc_product_sets_dict = {product_set.get('attributes').get('ps_id'): product_set for product_set in sc_product_sets_data}
+    log_info('Lookup dictionaries created successfully.')
   except Exception as e:
-    log_error(f'Error creating SharePoint lead developer dictionary: {e}')
-    return []
-  log_info(f'Found {len(sp_product_sets.get('value'))} product sets in SharePoint...')
-  log_info('Preparing SharePoint product sets data for processing...')
+    log_error(f'Error creating lookup disctionaries: {e}')
+    return None
+
+  log_info('Preparing SharePoint product sets data for processing')
   sp_product_sets_data = []
   for sp_product_set in sp_product_sets.get('value'):
     if product_set_id := sp_product_set.get('fields').get('ProductSetID', None):
@@ -63,30 +68,22 @@ def process_sc_product_sets(services, max_threads=10):
       sp_product_sets_data.append(sp_product_set_data)
   log_info('SharePoint product sets prepared successfully for Service Catalogue processing.')
 
-  log_info('Creating Lookup dictionaries for product sets ...')
   try:
-    log_debug('Creating SC product sets dictionary...')
-    sc_product_sets_dict = {product_set.get('attributes').get('ps_id'): product_set for product_set in sc_product_sets_data}
-  except Exception as e:
-    log_error(f'Error creating SC product sets dictionary: {e}')
-    sc_product_sets_dict = {}
-
-  try:
-    log_debug('Creating SharePoint product sets dictionary...')
+    log_debug('Creating SharePoint product sets dictionary')
     sp_product_sets_dict = {product_set.get('ps_id'): product_set for product_set in sp_product_sets_data}
   except Exception as e:
     log_error(f'Error creating SharePoint product sets dictionary: {e}')
-    sp_product_sets_dict = {}
+    return None
 
   # Compare and update sp_product_set_data
-  log_info('Comparing and updating product sets in service catalogue...')
+  log_info('Comparing and updating product sets in service catalogue')
   change_count = 0
   log_messages = []
-  log_info("Processing prepared product set sharepoint data for service catalogue ...")
+  log_info("Processing prepared product set sharepoint data for service catalogue ")
   log_messages.append("************** Processing Product Sets *********************")
   for sp_product_set in sp_product_sets_data:
     ps_id = sp_product_set.get('ps_id')
-    log_info(f"Processing product set {ps_id} from SharePoint")
+    log_info(f"Comparing product set {ps_id}")
     try:
       if ps_id in sc_product_sets_dict:
         sc_product_set = sc_product_sets_dict.get(ps_id)

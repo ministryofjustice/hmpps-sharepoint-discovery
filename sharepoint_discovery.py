@@ -101,19 +101,19 @@ def main():
   
   try:
     # Process Teams 
-    log_info('Processing teams...')
+    log_info('Processing teams')
     processed_teams = teams.process_sc_teams(services)
 
     # Process Product Sets
-    log_info('Processing product sets ...')
+    log_info('Processing product sets ')
     processed_product_sets = productSets.process_sc_product_sets(services)
 
     # Process Service areas
-    log_info('Processing service areas...')
+    log_info('Processing service areas')
     processed_service_area = serviceAreas.process_sc_service_areas(services)
 
     # Process products
-    log_info('Batch processing products...')
+    log_info('Batch processing products')
     processed_products = products.process_sc_products(services)
     
     # Combine output of all the processes
@@ -124,7 +124,7 @@ def main():
     processed_messages.extend(processed_products)
 
     if should_send_slack_notification(processed_messages):
-      log_info("Sending Slack notification...")
+      log_info("Sending Slack notification")
       slack.notify('\n'.join(processed_messages))
     else:
       log_info("No records processed, not sending Slack notification")

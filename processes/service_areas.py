@@ -14,45 +14,70 @@ class Services:
 def process_sc_service_areas(services, max_threads=10):
   sc = services.sc
   sp = services.sp
-  log_info('Processing Service Areas ...')
-  sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
-  if not sc_service_areas_data:
-    log_error(f'Errors occurred while fetching service areas from Service Catalogue')
-  else:
+  log_info('Processing Service Areas ')
+  try:
+    sc_service_areas_data = sc.get_all_records(sc.service_areas_get)
     log_info(f'Found {len(sc_service_areas_data)} service areas in Service Catalogue before processing')
-  sp_service_areas = sp.get_sharepoint_lists(services, 'Service Areas')
-  sp_service_owner_data = sp.get_sharepoint_lists(services, 'Service Owners')
-  sp_service_onwers_dict = {service_owner.get('fields').get('ServiceOwnerLookupId'): service_owner for service_owner in sp_service_owner_data.get('value')}
-  log_info(f'Found {len(sp_service_areas.get('value'))} Service Areas in SharePoint...')
+  except Exception as e:
+    log_error(f'Error fetching service areas from Service Catalogue: {e}, discontinuing processing service_areas.py.')
+    return None
+
+  try:
+    sp_service_areas = sp.get_sharepoint_lists(services, 'Service Areas')
+    log_info(f'Found {len(sp_service_areas.get('value'))} Service Areas in SharePoint')
+  except Exception as e:
+    log_error(f'Error fetching SharePoint service areas: {e}, discontinuing processing service_areas.py.')
+    return None
+
+  try:
+    log_info('Fetching service owners data from Sharepoint list')
+    sp_service_owner_data = sp.get_sharepoint_lists(services, 'Service Owners')
+    sp_service_onwers_dict = {service_owner.get('fields').get('ServiceOwnerLookupId'): service_owner for service_owner in sp_service_owner_data.get('value')}
+    log_info(f'Fetching service owners data from Sharepoint list completed successfully.')
+  except Exception as e:
+    log_error(f'Error fetching SharePoint service owners: {e}')
+
   sp_service_areas_data = []
+  log_info('Preparing SharePoint service areas data for processing')
   for sp_service_area in sp_service_areas.get('value'):
-    service_area_id= sp_service_area.get('fields').get('ServiceAreaID', None)
-    if service_area_id:
-      service_owner_id = sp_service_area.get('fields').get('ServiceOwnerLookupId')
-      if service_owner_id in sp_service_onwers_dict:
-        sp_service_owner = sp_service_onwers_dict.get(service_owner_id)
-        service_owner = sp_service_owner.get('fields').get('ServiceOwnerName')
-      sp_service_area_data = {
-          "sa_id": service_area_id,
-          "name": sp_service_area.get('fields').get('ServiceArea'),
-          "owner": service_owner,
-          "updated_by_id": 34
-        }
-      sp_service_areas_data.append(sp_service_area_data)
-  # Create a dictionary for quick lookup of sc_service_area_data by t_id
-  sc_service_areas_dict = {service_area.get('attributes').get('sa_id'): service_area for service_area in sc_service_areas_data}
-  sp_service_areas_dict = {service_area.get('sa_id'): service_area for service_area in sp_service_areas_data}
+    try:
+      service_area_id= sp_service_area.get('fields').get('ServiceAreaID', None)
+      if service_area_id:
+        service_owner_id = sp_service_area.get('fields').get('ServiceOwnerLookupId')
+        if service_owner_id in sp_service_onwers_dict:
+          sp_service_owner = sp_service_onwers_dict.get(service_owner_id)
+          service_owner = sp_service_owner.get('fields').get('ServiceOwnerName')
+        sp_service_area_data = {
+            "sa_id": service_area_id,
+            "name": sp_service_area.get('fields').get('ServiceArea'),
+            "owner": service_owner,
+            "updated_by_id": 34
+          }
+        sp_service_areas_data.append(sp_service_area_data)
+    except Exception as e:
+      log_error(f'Error preparing SharePoint service area data {sp_service_area}: {e}')
+      return None 
+
+  log_info('SharePoint service areas prepared successfully for SC processing.')
+
+  try:
+    log_info('Creating Service Catalogue service areas dictionary')
+    sc_service_areas_dict = {service_area.get('attributes').get('sa_id'): service_area for service_area in sc_service_areas_data}
+    sp_service_areas_dict = {service_area.get('sa_id'): service_area for service_area in sp_service_areas_data}
+    log_info(f'Creating lookup dictionaries completed successfully.')
+  except Exception as e:
+    log_error(f'Error creating lookup dictionaries: {e}, discontinuing processing service_areas.py.')
+    return None
 
   # Compare and update sp_service_area_data
   change_count = 0
   log_messages = []
-  log_info("Processing prepared service area sharepoint data for service catalogue ...")
+  log_info("Processing prepared service area sharepoint data for service catalogue ")
   log_messages.append("************** Processing Service Areas *********************")
   for sp_service_area in sp_service_areas_data:
     sa_id = sp_service_area.get('sa_id')
     if sc_service_areas_dict.get(sa_id):
-      log_debug(f"Processing Service Area sa_id {sa_id} :: {sp_service_area}")
-      log_info(f"Processing Service Area {sa_id} from Sharepoint")
+      log_info(f"Comparing Service Area {sa_id}")
       sc_service_area = sc_service_areas_dict.get(sa_id)
       mismatch_flag = False
       for key in sp_service_area.keys():

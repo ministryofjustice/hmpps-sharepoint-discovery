@@ -17,20 +17,22 @@ class Services:
 def process_sc_teams(services, max_threads=10):
   sc = services.sc
   sp = services.sp
+  log_info('Processing Teams ')
+  try:
+    sc_teams_data = sc.get_all_records(sc.teams_get)
+  except Exception as e:
+    log_error(f'Error fetching teams from Service Catalogue: {e}, discontinuing processing teams.py.')
+    return None
 
-  sc_teams_data = sc.get_all_records(sc.teams_get)
-  if not sc_teams_data:
-    log_error(f'Errors occurred while fetching teams from Service Catalogue')
-  else:
-    log_info(f'Service Catalogue teams before processing - {len(sc_teams_data)} ...')
   try:
     sp_teams = sp.get_sharepoint_lists(services, 'Teams')
   except Exception as e:
-    log_error(f'Error fetching SharePoint teams: {e}')
+    log_error(f'Error fetching SharePoint teams: {e}, discontinuing processing teams.py.')
+    return None
 
-  log_info(f'Found {len(sp_teams.get('value'))} teams in SharePoint...')
+  log_info(f'Found {len(sp_teams.get('value'))} teams in SharePoint')
   sp_teams_data = []
-  log_info(f'Preparing SharePoint teams...')
+  log_info(f'Preparing SharePoint teams data for service catalogue processing')
   for sp_team in sp_teams['value']:
     if team_id := sp_team.get('fields').get('TeamID', None):
       log_debug(f"Processing team {team_id} from SharePoint")
@@ -44,29 +46,23 @@ def process_sc_teams(services, max_threads=10):
       sp_teams_data.append(sp_team_data)
   log_info('SharePoint teams prepared successfully for SC processing.')
 
-  # Create a dictionary for quick lookup of sc_teams_data by t_id
-  log_info('Creating Lookup dictionaries ...')
   try:
+    log_info('Creating Lookup dictionaries ')
     sc_teams_dict = {team.get('attributes').get('t_id'): team for team in sc_teams_data}
-  except Exception as e:
-    log_error(f'Error creating SC teams dictionary: {e}')
-    sc_teams_dict = {}
-
-  try:
     sp_teams_dict = {team.get('t_id'): team for team in sp_teams_data}
+    log_info('Lookup dictionaries created successfully.')
   except Exception as e:
-    log_error(f'Error creating SharePoint teams dictionary: {e}')
-    sp_teams_dict = {}
-  log_info('Lookup dictionaries created successfully.')
+    log_error(f'Error creating lookup dictionaries: {e}, discontinuing processing teams.py.')
+    return None
 
   # Compare and update sp_teams_data
   change_count = 0  
   log_messages = []
-  log_info("Processing prepared teams sharepoint data for service catalogue ...")
+  log_info("Processing prepared teams sharepoint data for service catalogue ")
   log_messages.append("************** Processing Teams *********************")
   for sp_team in sp_teams_data:
     t_id = sp_team.get('t_id')
-    log_info(f"Processing team {t_id} from SharePoint")
+    log_info(f"Comparing team {t_id} from SharePoint")
     try:
       if t_id in sc_teams_dict:
         sc_team = sc_teams_dict.get(t_id)
