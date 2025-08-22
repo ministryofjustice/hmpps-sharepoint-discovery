@@ -1,20 +1,15 @@
 import requests
-import logging
 import json
 from azure.identity import ClientSecretCredential
-from utilities.discovery import job
 import processes.scheduled_jobs as sc_scheduled_job
+from utilities.job_log_handling import log_debug, log_error, log_info, log_critical, job
 
 class SharePoint:
-  def __init__(self, params, log_level=logging.INFO):
-    logging.basicConfig(
-      format='[%(asctime)s] %(levelname)s %(threadName)s %(message)s', level=log_level
-    )
+  def __init__(self, params):
     # default variables
     # page_size = 10
     # pagination_page_size = f'&pagination[pageSize]={page_size}'
 
-    self.log = logging.getLogger(__name__)
     self.az_tenant_id = params['az_tenant_id']
     self.sp_client_id = params['sp_client_id']
     self.sp_client_secret = params['sp_client_secret']
@@ -23,7 +18,7 @@ class SharePoint:
       credential = ClientSecretCredential(self.az_tenant_id, self.sp_client_id, self.sp_client_secret)
       self.token = credential.get_token('https://graph.microsoft.com/.default').token
     except Exception as e:
-      self.log.critical(f'Unable to get token - {e}')
+      log_critical(f'Unable to get token - {e}')
         
     self.api_headers = {
         'Authorization': f'Bearer {self.token}',
@@ -39,21 +34,21 @@ class SharePoint:
   def test_connection(self):
     # Test connection to Sharepoint
     try:
-      self.log.info(f'Testing connection to Sharepoint - {self.url}')
+      log_info(f'Testing connection to Sharepoint - {self.url}')
       r = requests.get(self.url, headers=self.api_headers)
-      self.log.info(
+      log_info(
         f'Successfully connected to Sharepoint - {self.url}. {r.status_code}'
       )
       self.lists_data = r.json()
       return True
     except Exception as e:
-      self.log.critical(f'Unable to connect to Sharepoint - {e}')
+      log_critical(f'Unable to connect to Sharepoint - {e}')
       return False
     
   def get_sharepoint_lists(self, services, list_name):
     if not self.lists_data:
-      job.error_messages.append(f"No Sharepoint lists data available. Please run test_connection first.")
-      self.log.error("No lists data available. Please run test_connection first.")
+      log_error(f"No Sharepoint lists data available. Please run test_connection first.")
+      log_error("No lists data available. Please run test_connection first.")
       sc_scheduled_job.update(services,'Failed')
       raise SystemExit()
 
@@ -76,14 +71,11 @@ class SharePoint:
             items = items_response.json()
             return items
           else:
-            self.log.error(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
-            job.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
+            log_error(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
         else:
-          self.log.error(f"Failed to retrieve fields metadata from {list_name} list: {fields_response.status_code} {fields_response.text}")
-          job.error_messages.append(f"Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}")
+          log_error(f"Failed to retrieve fields metadata from {list_name} list: {fields_response.status_code} {fields_response.text}")
       else:
-        self.log.error(f"List {list_name} not found.")
-        job.error_messages.append(f"List {list_name} not found.")
+        log_error(f"List {list_name} not found.")
     except Exception as e:
-      self.log.critical(f'Unable to connect to Sharepoint - {e}')
+      log_critical(f'Unable to connect to Sharepoint - {e}')
       return False
