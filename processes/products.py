@@ -92,11 +92,11 @@ def process_sc_products(services, max_threads=10):
     sp_lead_developer_dict = {lead_developer.get('id'): lead_developer for lead_developer in sp_lead_developer_data.get('value')}
     log_info("Creating SharePoint dictionaries for quick lookup completed")
     log_info("Creating Service Catalogue dictionaries for quick lookup")
-    sc_products_dict = {product.get('attributes').get('p_id').strip(): product for product in sc_products_data}
-    sc_product_name_dict = {product.get('attributes').get('name').strip(): product for product in sc_products_data}
-    sc_team_name_dict = {team.get('attributes').get('name').strip(): team for team in sc_teams_data}
-    sc_product_set_name_dict = {product_set.get('attributes').get('name').strip(): product_set for product_set in sc_product_sets_data}
-    sc_service_area_name_dict = {service_area.get('attributes').get('name').strip(): service_area for service_area in sc_service_areas_data}
+    sc_products_dict = {product.get('p_id').strip(): product for product in sc_products_data}
+    sc_product_name_dict = {product.get('name').strip(): product for product in sc_products_data}
+    sc_team_name_dict = {team.get('name').strip(): team for team in sc_teams_data}
+    sc_product_set_name_dict = {product_set.get('name').strip(): product_set for product_set in sc_product_sets_data}
+    sc_service_area_name_dict = {service_area.get('name').strip(): service_area for service_area in sc_service_areas_data}
     log_info("Creating Service Catalogue dictionaries for quick lookup completed")
   except Exception as e:
     log_error("Dictionary lookup creation failed. Discontinuing processing products.py.")
@@ -285,12 +285,12 @@ def process_sc_products(services, max_threads=10):
     try:
       p_id = sc_product.get('p_id').strip()
       if p_id not in sp_products_dict and 'HMPPS' not in p_id and 'DPS999' not in p_id:
-        log_messages.append(f"Unpublishing product :: {sc_product.get('attributes').get('p_id')}")
-        log_info(f"Unpublishing product  :: {sc_product.get('attributes').get('p_id')}")
+        log_messages.append(f"Unpublishing product :: {sc_product.get('p_id')}")
+        log_info(f"Unpublishing product  :: {sc_product.get('p_id')}")
         sc.unpublish('products', sc_product.get('documentId'))
         change_count += 1
     except Exception as e:
-      log_error(f"Error unpublishing product {sc_product.get('attributes').get('p_id')}: {e}")
+      log_error(f"Error unpublishing product {sc_product.get('p_id')}: {e}")
       continue
 
   log_messages.append(f"Products processed {change_count} in Service Catalogue") 

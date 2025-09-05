@@ -87,7 +87,7 @@ def process_sc_service_areas(services, max_threads=10):
         if compare_flag and key!='updated_by_id':
           sp_value = sp_service_area.get(key)
           try:
-            sc_value = sc_service_area.get('attributes').get(key)
+            sc_value = sc_service_area.get(key)
           except KeyError:
             log_error(f"Key {key} not found in Service Catalogue data for sa_id {sa_id}")
           if sp_value is not None and sc_value is not None:

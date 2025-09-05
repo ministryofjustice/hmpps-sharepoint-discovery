@@ -164,7 +164,7 @@ class ServiceCatalogue:
         timeout=10,
       )
       if x.status_code == 201:
-        self.log.info(
+        log_info(
           f'Successfully added {(data["team_name"] if "team_name" in data else data["name"])} to {table.split("/")[-1]}: {x.status_code}'
         )
         success = True

@@ -42,10 +42,10 @@ def process_sc_product_sets(services, max_threads=10):
   try:
     log_info('Creating Lookup dictionaries ')
     sp_lead_developer_dict = {lead_developer.get('id'): lead_developer for lead_developer in sp_lead_developer_data.get('value')}
-    sc_product_sets_dict = {product_set.get('attributes').get('ps_id'): product_set for product_set in sc_product_sets_data}
+    sc_product_sets_dict = {product_set.get('ps_id'): product_set for product_set in sc_product_sets_data}
     log_info('Lookup dictionaries created successfully.')
   except Exception as e:
-    log_error(f'Error creating lookup disctionaries: {e}')
+    log_error(f'Error creating lookup dictionaries: {e}')
     return None
 
   log_info('Preparing SharePoint product sets data for processing')
@@ -70,7 +70,6 @@ def process_sc_product_sets(services, max_threads=10):
 
   try:
     log_debug('Creating SharePoint product sets dictionary')
-    sc_product_sets_dict = {product_set.get('ps_id'): product_set for product_set in sc_product_sets_data}
     sp_product_sets_dict = {product_set.get('ps_id'): product_set for product_set in sp_product_sets_data}
   except Exception as e:
     log_error(f'Error creating SharePoint product sets dictionary: {e}')
@@ -90,7 +89,7 @@ def process_sc_product_sets(services, max_threads=10):
         sc_product_set = sc_product_sets_dict.get(ps_id)
         if sp_product_set.get('name').strip() != sc_product_set.get('name').strip():
           log_messages.append(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}")
-          log_info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set.get('attributes').get('name')} to {sp_product_set.get('name')}")
+          log_info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set.get('name')} to {sp_product_set.get('name')}")
           sc.update('product-sets', sc_product_set.get('documentId'), sp_product_set)
           change_count += 1
       else:
