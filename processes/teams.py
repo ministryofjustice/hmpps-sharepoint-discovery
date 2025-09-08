@@ -39,16 +39,16 @@ def process_sc_teams(services, max_threads=10):
       sp_team_data = {
         "t_id": team_id,
         "name": sp_team.get('fields').get('Team'),
-        "description": "n/a",
-        "slack_channel": "n/a",
-        "updated_by_id": 34
+        # "description": "n/a",  field not available in SC 
+        # "slack_channel": "n/a", Not populated so commenting out
+        # "updated_by_id": 34 Not working in strapi5 
       }
       sp_teams_data.append(sp_team_data)
   log_info('SharePoint teams prepared successfully for SC processing.')
 
   try:
     log_info('Creating Lookup dictionaries ')
-    sc_teams_dict = {team.get('attributes').get('t_id'): team for team in sc_teams_data}
+    sc_teams_dict = {team.get('t_id'): team for team in sc_teams_data}
     sp_teams_dict = {team.get('t_id'): team for team in sp_teams_data}
     log_info('Lookup dictionaries created successfully.')
   except Exception as e:
@@ -66,11 +66,11 @@ def process_sc_teams(services, max_threads=10):
     try:
       if t_id in sc_teams_dict:
         sc_team = sc_teams_dict.get(t_id)
-        if sp_team.get('name').strip() != sc_team.get('attributes').get('name').strip():
+        if sp_team['name'].strip() != sc_team.get('name').strip():
           log_messages.append(f"Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}")
           log_info(f"Updating Team name :: t_id {t_id} :: {sc_team} -> {sp_team}")
           try:
-            sc.update('teams', sc_team.get('id'), sp_team)
+            sc.update('teams', sc_team.get('documentId'), sp_team)
           except Exception as e:
             log_error(f"Error updating Team {t_id}: {e}")
           change_count += 1
@@ -86,13 +86,13 @@ def process_sc_teams(services, max_threads=10):
       log_messages.append(f"Error processing team {t_id}: {e}")
 
   for sc_team in sc_teams_data:
-    t_id = sc_team.get('attributes').get('t_id')
+    t_id = sc_team.get('t_id')
     try:
       if t_id not in sp_teams_dict:
         log_messages.append(f"Unpublishing team :: {sc_team}")
         log_info(f"Unpublishing team :: {sc_team}")
         try:
-          sc.unpublish('teams', sc_team.get('id'))
+          sc.unpublish('teams', sc_team.get('documentId'))
         except Exception as e:
           log_error(f"Error unpublishing Team {t_id}: {e}")
         change_count += 1

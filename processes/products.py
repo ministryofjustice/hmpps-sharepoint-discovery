@@ -26,7 +26,7 @@ def fetchID(services, sp_product, dict, key):
   if key in sp_product and sp_product[key] is not None:
     parent_key = sp_product[key]
     if parent_key in dict:
-      sp_product[key] = dict[parent_key]['id']
+      sp_product[key] = dict[parent_key]['documentId']
     else:
       log_error(f"Product reference key not found for {key} in Service Catalogue :: {sp_product[key]}")
       del sp_product[key]
@@ -92,11 +92,11 @@ def process_sc_products(services, max_threads=10):
     sp_lead_developer_dict = {lead_developer.get('id'): lead_developer for lead_developer in sp_lead_developer_data.get('value')}
     log_info("Creating SharePoint dictionaries for quick lookup completed")
     log_info("Creating Service Catalogue dictionaries for quick lookup")
-    sc_products_dict = {product.get('attributes').get('p_id').strip(): product for product in sc_products_data}
-    sc_product_name_dict = {product.get('attributes').get('name').strip(): product for product in sc_products_data}
-    sc_team_name_dict = {team.get('attributes').get('name').strip(): team for team in sc_teams_data}
-    sc_product_set_name_dict = {product_set.get('attributes').get('name').strip(): product_set for product_set in sc_product_sets_data}
-    sc_service_area_name_dict = {service_area.get('attributes').get('name').strip(): service_area for service_area in sc_service_areas_data}
+    sc_products_dict = {product.get('p_id').strip(): product for product in sc_products_data}
+    sc_product_name_dict = {product.get('name').strip(): product for product in sc_products_data}
+    sc_team_name_dict = {team.get('name').strip(): team for team in sc_teams_data}
+    sc_product_set_name_dict = {product_set.get('name').strip(): product_set for product_set in sc_product_sets_data}
+    sc_service_area_name_dict = {service_area.get('name').strip(): service_area for service_area in sc_service_areas_data}
     log_info("Creating Service Catalogue dictionaries for quick lookup completed")
   except Exception as e:
     log_error("Dictionary lookup creation failed. Discontinuing processing products.py.")
@@ -202,7 +202,7 @@ def process_sc_products(services, max_threads=10):
           "product_manager": product_manager,
           "lead_developer": lead_developer,
           "slack_channel_id": sp_product.get('fields', {}).get('SlackchannelID', None),
-          "updated_by_id": 34
+          # "updated_by_id": 34
         }
         sp_products_data.append(sp_product_data)
   log_info(f"Found {len(sp_products_data)} Products in SharePoint after processing")
@@ -222,14 +222,14 @@ def process_sc_products(services, max_threads=10):
         mismatch_flag = False
         for key in list(sp_product.keys()):
           compare_flag=False
-          if key in sp_product and key in sc_product.get('attributes'):
+          if key in sp_product and key in sc_product:
             compare_flag=True
           if compare_flag and key!='updated_by_id' and key!='subproduct' and key!="p_id":
             sp_value = clean_value(sp_product.get(key))
             if key == 'parent' or key == 'team' or key == 'product_set' or key == 'service_area':
-              if sc_product.get('attributes').get(key).get('data') and sc_product.get('attributes').get(key).get('data').get('attributes'):
+              if sc_product.get(key):
                 try:
-                  sc_value = clean_value(sc_product.get('attributes').get(key).get('data').get('attributes').get('name'))
+                  sc_value = clean_value(sc_product.get(key).get('name'))
                 except KeyError:
                   log_error(f"Key {key} not found in Service Catalogue data for p_id {p_id}")
                   sc_value = None
@@ -237,7 +237,7 @@ def process_sc_products(services, max_threads=10):
                 sc_value = None
             else:
               try:
-                sc_value=clean_value(sc_product.get('attributes').get(key))
+                sc_value=clean_value(sc_product.get(key))
               except KeyError:
                 log_error(f"Key {key} not found in Service Catalogue data for p_id {p_id}")
                 sc_value = None
@@ -251,7 +251,7 @@ def process_sc_products(services, max_threads=10):
                 del sp_product[key]
             
           elif compare_flag and key=='subproduct':
-            if sp_product.get(key) != sc_product.get('attributes').get(key):
+            if sp_product.get(key) != sc_product.get(key):
               log_messages.append(f"Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}")
               mismatch_flag = True
             else:
@@ -263,7 +263,7 @@ def process_sc_products(services, max_threads=10):
           sp_product = fetchID(services, sp_product, sc_product_set_name_dict, "product_set") if 'product_set' in sp_product else sp_product
           sp_product = fetchID(services, sp_product, sc_service_area_name_dict, "service_area") if 'service_area' in sp_product else sp_product
           log_info(f"Updating Product :: p_id {p_id} :: {sc_product} -> {sp_product}")
-          sc.update('products', sc_product.get('id'), sp_product)
+          sc.update('products', sc_product.get('documentId'), sp_product)
           change_count += 1
       except Exception as e:
         log_error(f"Error processing product p_id {p_id}: {e}")
@@ -283,14 +283,14 @@ def process_sc_products(services, max_threads=10):
 
   for sc_product in sc_products_data:
     try:
-      p_id = sc_product.get('attributes').get('p_id').strip()
+      p_id = sc_product.get('p_id').strip()
       if p_id not in sp_products_dict and 'HMPPS' not in p_id and 'DPS999' not in p_id:
-        log_messages.append(f"Unpublishing product :: {sc_product.get('attributes').get('p_id')}")
-        log_info(f"Unpublishing product  :: {sc_product.get('attributes').get('p_id')}")
-        sc.unpublish('products', sc_product.get('id'))
+        log_messages.append(f"Unpublishing product :: {sc_product.get('p_id')}")
+        log_info(f"Unpublishing product  :: {sc_product.get('p_id')}")
+        sc.unpublish('products', sc_product.get('documentId'))
         change_count += 1
     except Exception as e:
-      log_error(f"Error unpublishing product {sc_product.get('attributes').get('p_id')}: {e}")
+      log_error(f"Error unpublishing product {sc_product.get('p_id')}: {e}")
       continue
 
   log_messages.append(f"Products processed {change_count} in Service Catalogue") 

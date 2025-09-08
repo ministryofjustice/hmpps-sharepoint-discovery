@@ -51,7 +51,7 @@ def process_sc_service_areas(services, max_threads=10):
             "sa_id": service_area_id,
             "name": sp_service_area.get('fields').get('ServiceArea'),
             "owner": service_owner,
-            "updated_by_id": 34
+            # "updated_by_id": 34 Not working in strapi5 
           }
         sp_service_areas_data.append(sp_service_area_data)
     except Exception as e:
@@ -62,8 +62,8 @@ def process_sc_service_areas(services, max_threads=10):
 
   try:
     log_info('Creating Service Catalogue service areas dictionary')
-    sc_service_areas_dict = {service_area.get('attributes').get('sa_id'): service_area for service_area in sc_service_areas_data}
-    sp_service_areas_dict = {service_area.get('sa_id'): service_area for service_area in sp_service_areas_data}
+    sc_service_areas_dict = {service_area.get('sa_id'): service_area for service_area in sc_service_areas_data}
+    sp_service_areas_dict = {service_area['sa_id']: service_area for service_area in sp_service_areas_data}
     log_info(f'Creating lookup dictionaries completed successfully.')
   except Exception as e:
     log_error(f'Error creating lookup dictionaries: {e}, discontinuing processing service_areas.py.')
@@ -82,12 +82,12 @@ def process_sc_service_areas(services, max_threads=10):
       mismatch_flag = False
       for key in sp_service_area.keys():
         compare_flag=False
-        if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area['attributes']:
+        if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area:
           compare_flag=True
         if compare_flag and key!='updated_by_id':
           sp_value = sp_service_area.get(key)
           try:
-            sc_value = sc_service_area.get('attributes').get(key)
+            sc_value = sc_service_area.get(key)
           except KeyError:
             log_error(f"Key {key} not found in Service Catalogue data for sa_id {sa_id}")
           if sp_value is not None and sc_value is not None:
@@ -97,7 +97,7 @@ def process_sc_service_areas(services, max_threads=10):
               mismatch_flag = True
       if mismatch_flag:
         try:
-          sc.update('service-areas', sc_service_area.get('id'), sp_service_area)
+          sc.update('service-areas', sc_service_area.get('documentId'), sp_service_area)
         except Exception as e:
           log_error(f"Error updating Service Area {sa_id}: {e}")
         change_count += 1
@@ -111,12 +111,12 @@ def process_sc_service_areas(services, max_threads=10):
       change_count += 1
 
   for sc_service_area in sc_service_areas_data:
-    sa_id = sc_service_area.get('attributes').get('sa_id')
+    sa_id = sc_service_area.get('sa_id')
     if sa_id not in sp_service_areas_dict and 'SP' not in sa_id:
       log_messages.append(f"Unpublishing Service Area :: {sc_service_area}")
       log_info(f"Unpublishing Service Area :: {sc_service_area}")
       try:
-        sc.unpublish('service-areas', sc_service_area.get('id'))
+        sc.unpublish('service-areas', sc_service_area.get('documentId'))
       except Exception as e:
         log_error(f"Error unpublishing Service Area {sa_id}: {e}")
       change_count += 1

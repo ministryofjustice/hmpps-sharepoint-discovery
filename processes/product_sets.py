@@ -42,10 +42,10 @@ def process_sc_product_sets(services, max_threads=10):
   try:
     log_info('Creating Lookup dictionaries ')
     sp_lead_developer_dict = {lead_developer.get('id'): lead_developer for lead_developer in sp_lead_developer_data.get('value')}
-    sc_product_sets_dict = {product_set.get('attributes').get('ps_id'): product_set for product_set in sc_product_sets_data}
+    sc_product_sets_dict = {product_set.get('ps_id'): product_set for product_set in sc_product_sets_data}
     log_info('Lookup dictionaries created successfully.')
   except Exception as e:
-    log_error(f'Error creating lookup disctionaries: {e}')
+    log_error(f'Error creating lookup dictionaries: {e}')
     return None
 
   log_info('Preparing SharePoint product sets data for processing')
@@ -63,7 +63,7 @@ def process_sc_product_sets(services, max_threads=10):
         "ps_id": product_set_id,
         "name": sp_product_set.get('fields').get('ProductSet', None),
         "lead_developer": lead_developer,
-        "updated_by_id": 34
+        # "updated_by_id": 34
       }
       sp_product_sets_data.append(sp_product_set_data)
   log_info('SharePoint product sets prepared successfully for Service Catalogue processing.')
@@ -87,10 +87,10 @@ def process_sc_product_sets(services, max_threads=10):
     try:
       if ps_id in sc_product_sets_dict:
         sc_product_set = sc_product_sets_dict.get(ps_id)
-        if sp_product_set.get('name').strip() != sc_product_set.get('attributes').get('name').strip():
+        if sp_product_set.get('name').strip() != sc_product_set.get('name').strip():
           log_messages.append(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}")
-          log_info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set.get('attributes').get('name')} to {sp_product_set.get('name')}")
-          sc.update('product-sets', sc_product_set.get('id'), sp_product_set)
+          log_info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set.get('name')} to {sp_product_set.get('name')}")
+          sc.update('product-sets', sc_product_set.get('documentId'), sp_product_set)
           change_count += 1
       else:
         log_messages.append(f"Adding product set :: {sp_product_set.get('name')}")
@@ -102,12 +102,12 @@ def process_sc_product_sets(services, max_threads=10):
       log_error(f"Error processing product set {ps_id}: {e}")
 
   for sc_product_set in sc_product_sets_data:
-    ps_id = sc_product_set.get('attributes').get('ps_id')
+    ps_id = sc_product_set.get('ps_id')
     if ps_id not in sp_product_sets_dict:
       log_messages.append(f"Unpublishing product set :: {sc_product_set}")
       log_info(f"Unpublishing product set :: {sc_product_set}")
       try:
-        sc.unpublish('product-sets', sc_product_set.get('id'))
+        sc.unpublish('product-sets', sc_product_set.get('documentId'))
       except Exception as e:
         log_error(f"Error unpublishing product set {ps_id}: {e}")
       change_count += 1
