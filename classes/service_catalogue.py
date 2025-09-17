@@ -1,6 +1,6 @@
 import requests
 import json
-from utilities.job_log_handling import log_debug, log_error, log_info, log_critical
+from utilities.job_log_handling import log_debug, log_error, log_info, log_critical, log_warning
 
 class ServiceCatalogue:
   def __init__(self, params):

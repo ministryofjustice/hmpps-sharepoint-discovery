@@ -3,6 +3,7 @@ from time import sleep
 from classes.slack import Slack
 from classes.service_catalogue import ServiceCatalogue
 from classes.sharepoint import SharePoint
+from slugify import slugify
 from utilities.job_log_handling import log_debug, log_error, log_info, log_critical
 
 class Services:
@@ -59,10 +60,12 @@ def process_sc_product_sets(services, max_threads=10):
           lead_developer = None
           log_error(f'Lead Developer ID {lead_developer_id} not found in SharePoint lead developers data.')
 
+      product_set_name = sp_product_set.get('fields').get('ProductSet', None)
       sp_product_set_data = {
         "ps_id": product_set_id,
-        "name": sp_product_set.get('fields').get('ProductSet', None),
+        "name": product_set_name,
         "lead_developer": lead_developer,
+        "slug": slugify(product_set_name) if product_set_name else None,
         # "updated_by_id": 34
       }
       sp_product_sets_data.append(sp_product_set_data)
@@ -87,7 +90,7 @@ def process_sc_product_sets(services, max_threads=10):
     try:
       if ps_id in sc_product_sets_dict:
         sc_product_set = sc_product_sets_dict.get(ps_id)
-        if sp_product_set.get('name').strip() != sc_product_set.get('name').strip():
+        if sp_product_set.get('name').strip() != sc_product_set.get('name').strip() or sp_product_set.get('slug') != sc_product_set.get('slug') or sp_product_set.get('lead_developer') != sc_product_set.get('lead_developer'):
           log_messages.append(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}")
           log_info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set.get('name')} to {sp_product_set.get('name')}")
           sc.update('product-sets', sc_product_set.get('documentId'), sp_product_set)
