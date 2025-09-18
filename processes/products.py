@@ -223,10 +223,12 @@ def process_sc_products(services, max_threads=10):
         sc_product = sc_products_dict.get(p_id)
         mismatch_flag = False
         for key in list(sp_product.keys()):
+          if key == 'slug':
+            continue
           compare_flag=False
           if key in sp_product and key in sc_product:
             compare_flag=True
-          if compare_flag and key!='updated_by_id' and key!='subproduct' and key!="p_id":
+          if compare_flag and key!='updated_by_id' and key!='subproduct' and key!='p_id':
             sp_value = clean_value(sp_product.get(key))
             if key == 'parent' or key == 'team' or key == 'product_set' or key == 'service_area':
               if sc_product.get(key):
@@ -259,7 +261,7 @@ def process_sc_products(services, max_threads=10):
             else:
               del sp_product[key]
 
-        if mismatch_flag:
+        if mismatch_flag and sc_product.get('slug') is None:
           sp_product = fetchID(services, sp_product, sc_product_name_dict, "parent") if 'parent' in sp_product else sp_product
           sp_product = fetchID(services, sp_product, sc_team_name_dict, "team") if 'team' in sp_product else sp_product
           sp_product = fetchID(services, sp_product, sc_product_set_name_dict, "product_set") if 'product_set' in sp_product else sp_product

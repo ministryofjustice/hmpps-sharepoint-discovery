@@ -90,7 +90,7 @@ def process_sc_product_sets(services, max_threads=10):
     try:
       if ps_id in sc_product_sets_dict:
         sc_product_set = sc_product_sets_dict.get(ps_id)
-        if sp_product_set.get('name').strip() != sc_product_set.get('name').strip() or sp_product_set.get('slug') != sc_product_set.get('slug') or sp_product_set.get('lead_developer') != sc_product_set.get('lead_developer'):
+        if sp_product_set.get('name').strip() != sc_product_set.get('name').strip() or sc_product_set.get('slug') is None or sp_product_set.get('lead_developer') != sc_product_set.get('lead_developer'):
           log_messages.append(f"Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}")
           log_info(f"Updating product set :: ps_id {ps_id} :: {sc_product_set.get('name')} to {sp_product_set.get('name')}")
           sc.update('product-sets', sc_product_set.get('documentId'), sp_product_set)

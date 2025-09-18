@@ -69,7 +69,7 @@ def process_sc_teams(services, max_threads=10):
     try:
       if t_id in sc_teams_dict:
         sc_team = sc_teams_dict.get(t_id)
-        if sp_team['name'].strip() != sc_team.get('name').strip() or sp_team['slug'] != sc_team.get('slug'):
+        if sp_team['name'].strip() != sc_team.get('name').strip() or sc_team.get('slug') is None:
           log_messages.append(f"Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}")
           log_info(f"Updating Team name :: t_id {t_id} :: {sc_team} -> {sp_team}")
           try:

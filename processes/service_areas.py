@@ -87,7 +87,7 @@ def process_sc_service_areas(services, max_threads=10):
         compare_flag=False
         if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area:
           compare_flag=True
-        if compare_flag and key!='updated_by_id':
+        if compare_flag and key!='updated_by_id' and key != 'slug':
           sp_value = sp_service_area.get(key)
           try:
             sc_value = sc_service_area.get(key)
@@ -98,7 +98,7 @@ def process_sc_service_areas(services, max_threads=10):
               log_messages.append(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
               log_info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
               mismatch_flag = True
-      if mismatch_flag:
+      if mismatch_flag or sc_service_area.get('slug') is None:
         try:
           sc.update('service-areas', sc_service_area.get('documentId'), sp_service_area)
         except Exception as e:
