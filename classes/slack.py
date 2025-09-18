@@ -1,6 +1,6 @@
 from slack_sdk import WebClient
 from slack_sdk.errors import SlackApiError
-from utilities.job_log_handling import log_debug, log_error, log_info, log_critical
+from utilities.job_log_handling import log_debug, log_error, log_info, log_critical, log_warning
 
 class Slack:
   def __init__(self, slack_params):

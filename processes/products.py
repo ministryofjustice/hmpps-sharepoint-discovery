@@ -5,6 +5,7 @@ import html
 from classes.slack import Slack
 from classes.service_catalogue import ServiceCatalogue
 from classes.sharepoint import SharePoint
+from slugify import slugify
 from utilities.job_log_handling import log_debug, log_error, log_info, log_critical, log_warning
 
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
@@ -187,10 +188,10 @@ def process_sc_products(services, max_threads=10):
           except Exception as e:
             lead_developer = None
             log_error(f"Lead Developer not found for product_id: {product_id}")
-
+        product_name = clean_value(sp_product.get('fields', {}).get('Product', None))
         sp_product_data = {
           "p_id": product_id,
-          "name": clean_value(sp_product.get('fields', {}).get('Product', None)),
+          "name": product_name,
           "subproduct": subproductBool,
           "parent": parent,
           "description": clean_value(sp_product['fields'].get('Description_x0028_SourceData_x00', None)),
@@ -202,6 +203,7 @@ def process_sc_products(services, max_threads=10):
           "product_manager": product_manager,
           "lead_developer": lead_developer,
           "slack_channel_id": sp_product.get('fields', {}).get('SlackchannelID', None),
+          "slug": slugify(product_name) if product_name else None,
           # "updated_by_id": 34
         }
         sp_products_data.append(sp_product_data)
@@ -221,10 +223,12 @@ def process_sc_products(services, max_threads=10):
         sc_product = sc_products_dict.get(p_id)
         mismatch_flag = False
         for key in list(sp_product.keys()):
+          if key == 'slug':
+            continue
           compare_flag=False
           if key in sp_product and key in sc_product:
             compare_flag=True
-          if compare_flag and key!='updated_by_id' and key!='subproduct' and key!="p_id":
+          if compare_flag and key!='updated_by_id' and key!='subproduct' and key!='p_id':
             sp_value = clean_value(sp_product.get(key))
             if key == 'parent' or key == 'team' or key == 'product_set' or key == 'service_area':
               if sc_product.get(key):
@@ -257,7 +261,7 @@ def process_sc_products(services, max_threads=10):
             else:
               del sp_product[key]
 
-        if mismatch_flag:
+        if mismatch_flag and sc_product.get('slug') is None:
           sp_product = fetchID(services, sp_product, sc_product_name_dict, "parent") if 'parent' in sp_product else sp_product
           sp_product = fetchID(services, sp_product, sc_team_name_dict, "team") if 'team' in sp_product else sp_product
           sp_product = fetchID(services, sp_product, sc_product_set_name_dict, "product_set") if 'product_set' in sp_product else sp_product

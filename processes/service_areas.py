@@ -3,6 +3,7 @@ from time import sleep
 from classes.slack import Slack
 from classes.service_catalogue import ServiceCatalogue
 from classes.sharepoint import SharePoint
+from slugify import slugify
 from utilities.job_log_handling import log_debug, log_error, log_info, log_critical
 
 class Services:
@@ -47,10 +48,12 @@ def process_sc_service_areas(services, max_threads=10):
         if service_owner_id in sp_service_onwers_dict:
           sp_service_owner = sp_service_onwers_dict.get(service_owner_id)
           service_owner = sp_service_owner.get('fields').get('ServiceOwnerName')
+        service_area_name = sp_service_area.get('fields').get('ServiceArea', None)
         sp_service_area_data = {
             "sa_id": service_area_id,
-            "name": sp_service_area.get('fields').get('ServiceArea'),
+            "name": service_area_name,
             "owner": service_owner,
+            "slug": slugify(service_area_name) if service_area_name else None,
             # "updated_by_id": 34 Not working in strapi5 
           }
         sp_service_areas_data.append(sp_service_area_data)
@@ -84,7 +87,7 @@ def process_sc_service_areas(services, max_threads=10):
         compare_flag=False
         if sa_id in sc_service_areas_dict and key in sp_service_area and key in sc_service_area:
           compare_flag=True
-        if compare_flag and key!='updated_by_id':
+        if compare_flag and key!='updated_by_id' and key != 'slug':
           sp_value = sp_service_area.get(key)
           try:
             sc_value = sc_service_area.get(key)
@@ -95,7 +98,7 @@ def process_sc_service_areas(services, max_threads=10):
               log_messages.append(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
               log_info(f"Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}")
               mismatch_flag = True
-      if mismatch_flag:
+      if mismatch_flag or sc_service_area.get('slug') is None:
         try:
           sc.update('service-areas', sc_service_area.get('documentId'), sp_service_area)
         except Exception as e:
