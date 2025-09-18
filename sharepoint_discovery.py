@@ -117,7 +117,8 @@ def main():
     processed_products = products.process_sc_products(services)
     
     # Combine output of all the processes
-    processed_messages = []
+    summary_header = "*SharePoint Discovery Summary*"
+    processed_messages = [summary_header]
     processed_messages.extend(processed_teams)
     processed_messages.extend(processed_product_sets)
     processed_messages.extend(processed_service_area)
