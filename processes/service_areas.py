@@ -113,12 +113,12 @@ def process_sc_service_areas(services, max_threads=10):
   for sc_service_area in sc_service_areas_data:
     sa_id = sc_service_area.get('sa_id')
     if sa_id not in sp_service_areas_dict and 'SP' not in sa_id:
-      log_messages.append(f"Unpublishing Service Area :: {sc_service_area}")
-      log_info(f"Unpublishing Service Area :: {sc_service_area}")
+      log_messages.append(f"Deleting Service Area :: {sc_service_area}")
+      log_info(f"Deleting Service Area :: {sc_service_area}")
       try:
-        sc.unpublish('service-areas', sc_service_area.get('documentId'))
+        sc.delete('service-areas', sc_service_area.get('documentId'))
       except Exception as e:
-        log_error(f"Error unpublishing Service Area {sa_id}: {e}")
+        log_error(f"Error deleting Service Area {sa_id}: {e}")
       change_count += 1
 
   log_messages.append(f"Service Areas processed {change_count} in Service Catalogue") 

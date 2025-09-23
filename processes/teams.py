@@ -89,15 +89,15 @@ def process_sc_teams(services, max_threads=10):
     t_id = sc_team.get('t_id')
     try:
       if t_id not in sp_teams_dict:
-        log_messages.append(f"Unpublishing team :: {sc_team}")
-        log_info(f"Unpublishing team :: {sc_team}")
+        log_messages.append(f"Deleting team :: {sc_team}")
+        log_info(f"Deleting team :: {sc_team}")
         try:
-          sc.unpublish('teams', sc_team.get('documentId'))
+          sc.delete('teams', sc_team.get('documentId'))
         except Exception as e:
-          log_error(f"Error unpublishing Team {t_id}: {e}")
+          log_error(f"Error deleting Team {t_id}: {e}")
         change_count += 1
     except Exception as e:
-      log_error(f"Error unpublishing team {t_id}: {e}")
+      log_error(f"Error deleting team {t_id}: {e}")
 
   log_messages.append(f"Teams processed {change_count} in Service Catalogue") 
   log_info(f"Teams processed {change_count} in Service Catalogue")

@@ -181,20 +181,18 @@ class ServiceCatalogue:
     else:
       return success
 
-  def unpublish(self, table, element_id):
+  def delete(self, table, element_id):
     success = False
     try:
-      # log_debug(f'data to be unpublished: {json.dumps(data, indent=2)}')
-      data = {'publishedAt': None}
-      x = requests.put(
+      # log_debug(f'data to be deleted: {json.dumps(data, indent=2)}')
+      x = requests.delete(
         f'{self.url}/v1/{table}/{element_id}',
         headers=self.api_headers,
-        json={'data': data},
         timeout=10,
       )
       if x.status_code == 200:
         log_info(
-          f'Successfully unpublished record {element_id} in {table.split("/")[-1]}: {x.status_code}'
+          f'Successfully deleted record {element_id} in {table.split("/")[-1]}: {x.status_code}'
         )
         success = True
       else:
