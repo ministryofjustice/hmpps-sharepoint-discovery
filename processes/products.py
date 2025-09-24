@@ -285,12 +285,12 @@ def process_sc_products(services, max_threads=10):
     try:
       p_id = sc_product.get('p_id').strip()
       if p_id not in sp_products_dict and 'HMPPS' not in p_id and 'DPS999' not in p_id:
-        log_messages.append(f"Unpublishing product :: {sc_product.get('p_id')}")
-        log_info(f"Unpublishing product  :: {sc_product.get('p_id')}")
-        sc.unpublish('products', sc_product.get('documentId'))
+        log_messages.append(f"Deleting product :: {sc_product.get('p_id')}")
+        log_info(f"Deleting product  :: {sc_product.get('p_id')}")
+        sc.delete('products', sc_product.get('documentId'))
         change_count += 1
     except Exception as e:
-      log_error(f"Error unpublishing product {sc_product.get('p_id')}: {e}")
+      log_error(f"Error deleting product {sc_product.get('p_id')}: {e}")
       continue
 
   log_messages.append(f"Products processed {change_count} in Service Catalogue") 

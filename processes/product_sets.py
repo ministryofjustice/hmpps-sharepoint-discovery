@@ -104,12 +104,12 @@ def process_sc_product_sets(services, max_threads=10):
   for sc_product_set in sc_product_sets_data:
     ps_id = sc_product_set.get('ps_id')
     if ps_id not in sp_product_sets_dict:
-      log_messages.append(f"Unpublishing product set :: {sc_product_set}")
-      log_info(f"Unpublishing product set :: {sc_product_set}")
+      log_messages.append(f"Deleting product set :: {sc_product_set}")
+      log_info(f"Deleting product set :: {sc_product_set}")
       try:
-        sc.unpublish('product-sets', sc_product_set.get('documentId'))
+        sc.delete('product-sets', sc_product_set.get('documentId'))
       except Exception as e:
-        log_error(f"Error unpublishing product set {ps_id}: {e}")
+        log_error(f"Error deleting product set {ps_id}: {e}")
       change_count += 1
 
   log_messages.append(f"Product Set processed {change_count} in Service Catalogue") 
