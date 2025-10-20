@@ -1,0 +1,14 @@
+[project]
+name = "hmpps-sharepoint-discovery"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "azure-identity==1.21.0",
+    "dockerfile-parse==2.0.1",
+    "hmpps-python-lib",
+]
+
+[tool.uv.sources]
+hmpps-python-lib = { url = "https://github.com/ministryofjustice/hmpps-python-lib/releases/download/v0.1.5/hmpps_python_lib-0.1.5-py3-none-any.whl" }
