@@ -60,6 +60,12 @@ def process_sc_service_areas(services):
   }
   log_debug('Lookup dictionaries created successfully.')
 
+  # Quick summary before we start
+  log_info(
+    f'Found {len(sp.data["Service Areas"].get("value", []))} service areas in Sharepoint'
+  )
+  log_info(f'Found {len(sc_service_areas_data)} service areas in Service Catalogue')
+
   # Compare and update sp_service_area_data
   change_count = 0
   log_messages = []
@@ -76,7 +82,7 @@ def process_sc_service_areas(services):
       continue
 
     # Otherwise do the comparisons
-    log_info(f'Comparing Service Area {sa_id}')
+    log_debug(f'Comparing Service Area {sa_id}')
     sc_service_area = sc_service_areas_dict.get(sa_id, {})
     for key in sp_service_area.keys():
       if (

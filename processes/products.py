@@ -33,7 +33,7 @@ def fetchID(sp_product, dict, key):
 
 # generic lookup
 def link_product_data(sp, sp_product):
-  log_info('Linking product with other Sharepoint data')
+  log_debug('Linking product with other Sharepoint data')
   product_id = sp_product.get('fields', {}).get('ProductID', None)
   product_data = {}
   # This is a tuple of
@@ -72,12 +72,14 @@ def link_product_data(sp, sp_product):
 def extract_sp_products_data(sp):
   sp_products_data = []
   for sp_product in sp.data['Products and Teams Main List'].get('value'):
-    log_info(
+    log_debug(
       f'Extracting SharePoint product data for: {sp_product.get("fields", {}).get("ProductID", None)}'
     )
     if sp_product.get('fields').get('DecommissionedProduct', '').upper() == 'YES':
       # Skip the processing if it's decommissioned
-      log_info(f'Skipping (decommissioned) ...')
+      log_info(
+        f'Skipping {sp_product.get("fields", {}).get("ProductID", None)} (decommissioned) ...'
+      )
       continue
 
     product_id = sp_product.get('fields', {}).get('ProductID', None)
@@ -153,9 +155,12 @@ def process_sc_products(services):
 
   # Sharepoint data processing
   sp_products_data = extract_sp_products_data(sp)
-  log_info(f'Found {len(sp_products_data)} Products in SharePoint after processing')
 
   sp_products_dict = {product.get('p_id'): product for product in sp_products_data}
+
+  # Quick summary before we start
+  log_info(f'Found {len(sp_products_data)} products in SharePoint (after processing)')
+  log_info(f'Found {len(sc_products_data)} products in Service Catalogue')
 
   # Compare and update sp_product_data
   log_info('Processing prepared products sharepoint data for service catalogue ')
@@ -266,6 +271,6 @@ def process_sc_products(services):
       sc.delete('products', sc_product.get('documentId'))
       change_count += 1
 
-  log_and_append(f'Productss in Service Catalogue processed: {change_count}')
+  log_and_append(f'Products in Service Catalogue processed: {change_count}')
   log_messages.append('*******************************************************')
   return log_messages

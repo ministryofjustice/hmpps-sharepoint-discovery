@@ -31,8 +31,10 @@ def process_sc_teams(services):
   change_count = 0
   log_messages = []
 
+  # Service Catalogue
   log_info('Creating Lookup dictionaries ')
   sc_teams_data = sc.get_all_records('teams')
+
   if not sc_teams_data:
     log_warning('No teams returned from Service Catalogue')
   sc_teams_dict = {team.get('t_id'): team for team in sc_teams_data}
@@ -43,9 +45,14 @@ def process_sc_teams(services):
     log_error('No teams returned from Sharepoint')
     return None
 
+  # Quick summary before we start
+  log_info(f'Found {len(sp.data["Teams"].get("value", []))} teams in Sharepoint')
+  log_info(f'Found {len(sc_teams_data)} teams in Service Catalogue')
+
   # Compare and update sp_teams_data
   log_info('Processing prepared teams sharepoint data for service catalogue ')
   log_messages.append('************** Processing Teams *********************')
+
   for sp_team in sp_teams_data:
     t_id = sp_team.get('t_id')
     log_info(f'Comparing team {t_id} from SharePoint')

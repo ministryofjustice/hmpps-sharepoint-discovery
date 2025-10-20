@@ -47,6 +47,7 @@ class Services:
 
 
 def log_info_u(message):
+  log_info('')
   log_info(message)
   log_info(f'{"=" * len(message)}')
   log_info('')

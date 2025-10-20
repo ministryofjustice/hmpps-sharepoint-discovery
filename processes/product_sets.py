@@ -45,8 +45,6 @@ def process_sc_product_sets(services):
   if not sc_product_sets_data:
     log_warning('No product sets returned from the Service Catalogue')
 
-  log_info(f'Found {len(sc_product_sets_data)} product sets in Service Catalogue')
-
   # Create dictionary of product sets
   sc_product_sets_dict = {
     product_set.get('ps_id'): product_set for product_set in sc_product_sets_data
@@ -64,10 +62,16 @@ def process_sc_product_sets(services):
   change_count = 0
   log_messages = []
 
+  # Quick summary before we start
+  log_info(
+    f'Found {len(sp.data["Product Set"].get("value", []))} product sets in Sharepoint'
+  )
+  log_info(f'Found {len(sc_product_sets_data)} product sets in Service Catalogue')
+
   log_and_append('************** Processing Product Sets *********************')
   for sp_product_set in sp_product_sets_data:
     ps_id = sp_product_set.get('ps_id')
-    log_info(f'Comparing product set {ps_id}')
+    log_debug(f'Comparing product set {ps_id}')
     if ps_id not in sc_product_sets_dict:
       log_and_append(f'Adding product set :: {sp_product_set.get("name")}')
       sc.add('product-sets', sp_product_set)
