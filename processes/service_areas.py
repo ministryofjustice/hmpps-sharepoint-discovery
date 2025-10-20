@@ -102,6 +102,5 @@ def process_sc_service_areas(services):
       sc.delete('service-areas', sc_service_area.get('documentId'))
       change_count += 1
 
-  log_messages.append(f'Service Areas processed: {change_count} in Service Catalogue')
-  log_info(f'Service Areas processed: {change_count} in Service Catalogue')
+  log_and_append(f'Service Areas in Service Catalogue processed: {change_count}')
   return log_messages

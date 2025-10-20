@@ -22,6 +22,10 @@ def fetch_sp_teams_data(sp_teams):
 
 
 def process_sc_teams(services):
+  def log_and_append(message):
+    log_info(message)
+    log_messages.append(message)
+
   sc = services.sc
   sp = services.sp
   change_count = 0
@@ -50,11 +54,11 @@ def process_sc_teams(services):
     if t_id in sc_teams_dict:
       sc_team = sc_teams_dict.get(t_id, {})
       if sp_team['name'].strip() != sc_team.get('name').strip():
-        log_messages.append(f'Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}')
+        log_and_append(f'Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}')
         sc.update('teams', sc_team.get('documentId'), sp_team)
         change_count += 1
     else:
-      log_messages.append(f'Adding team :: {sp_team.get("name")}')
+      log_and_append(f'Adding team :: {sp_team.get("name")}')
       sc.add('teams', sp_team)
       change_count += 1
 
@@ -62,10 +66,9 @@ def process_sc_teams(services):
   for sc_team in sc_teams_data:
     t_id = sc_team.get('t_id')
     if t_id not in sp_teams_dict:
-      log_messages.append(f'Deleting team :: {sc_team}')
+      log_and_append(f'Deleting team :: {sc_team}')
       sc.delete('teams', sc_team.get('documentId'))
       change_count += 1
 
-  log_messages.append(f'Teams in Service Catalogue processed: {change_count}')
-
+  log_and_append(f'Product Sets in Service Catalogue processed: {change_count}')
   return log_messages

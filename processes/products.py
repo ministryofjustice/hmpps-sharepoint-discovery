@@ -134,15 +134,8 @@ def process_sc_products(services):
   sc_teams_data = sc.get_all_records('teams')
   sc_product_sets_data = sc.get_all_records('product-sets')
   sc_service_areas_data = sc.get_all_records('service-areas')
-  if (
-    not sc_products_data
-    or not sc_teams_data
-    or not sc_product_sets_data
-    or not sc_service_areas_data
-  ):
-    log_error('Data missing from Service catalogue.')
-    return None
 
+  # Create the dictionaries
   sc_products_dict = {
     product.get('p_id').strip(): product for product in sc_products_data
   }
@@ -158,25 +151,7 @@ def process_sc_products(services):
     for service_area in sc_service_areas_data
   }
 
-  # Sharepoint
-  for sp_list in [
-    'Products and Teams Main List',
-    'Teams',
-    'Product Set',
-    'Service Areas',
-    'Delivery Managers',
-    'Product Managers',
-    'Lead Developers',
-  ]:
-    # Lookup data for Teams, Product Set, Service Areas, Delivery Managers, Product Managers, Lead Developers
-    log_debug(f'Fetching {sp_list} from SharePoint')
-    if not sp.get_sharepoint_lists(sp_list):
-      log_error(f'No {sp_list} items returned from Sharepoint')
-      return None
-    log_info(
-      f'Found {len(sp.data[sp_list].get("value", []))} {sp_list} entries in SharePoint'
-    )
-
+  # Sharepoint data processing
   sp_products_data = extract_sp_products_data(sp)
   log_info(f'Found {len(sp_products_data)} Products in SharePoint after processing')
 
@@ -291,7 +266,6 @@ def process_sc_products(services):
       sc.delete('products', sc_product.get('documentId'))
       change_count += 1
 
-  log_messages.append(f'Products processed {change_count} in Service Catalogue')
-  log_info(f'Products processed {change_count} in Service Catalogue')
+  log_and_append(f'Productss in Service Catalogue processed: {change_count}')
   log_messages.append('*******************************************************')
   return log_messages
