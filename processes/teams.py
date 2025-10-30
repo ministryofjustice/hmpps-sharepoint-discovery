@@ -51,7 +51,7 @@ def process_sc_teams(services):
 
   # Compare and update sp_teams_data
   log_info('Processing prepared teams sharepoint data for service catalogue ')
-  log_messages.append('************** Processing Teams *********************')
+  log_info('************** Processing Teams *********************')
 
   for sp_team in sp_teams_data:
     t_id = sp_team.get('t_id')
@@ -60,6 +60,7 @@ def process_sc_teams(services):
     # Add or update teams in Service Catalogue
     if t_id in sc_teams_dict:
       sc_team = sc_teams_dict.get(t_id, {})
+      log_debug(f'\nComparing SC team {sc_team} \nwith SP team {sp_team}')
       if sp_team['name'].strip() != sc_team.get('name').strip():
         log_and_append(f'Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}')
         sc.update('teams', sc_team.get('documentId'), sp_team)
@@ -77,5 +78,5 @@ def process_sc_teams(services):
       sc.delete('teams', sc_team.get('documentId'))
       change_count += 1
 
-  log_and_append(f'Product Sets in Service Catalogue processed: {change_count}')
+  log_and_append(f'Teams in Service Catalogue processed: {change_count}')
   return log_messages

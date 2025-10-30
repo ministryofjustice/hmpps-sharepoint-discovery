@@ -8,8 +8,9 @@ def find_lead_developer(sp_product_set, sp_lead_developer_dict):
       sp_lead_developer_dict.get(lead_developer_id, {}).get('fields', {}).get('Title')
     ) or None
   else:
+    product_set_id = sp_product_set.get('fields').get('ProductSetID', 'Unknown')
     log_warning(
-      f'Lead Developer ID {lead_developer_id} not found in SharePoint lead developers data.'
+      f'Product Set {product_set_id} Lead Developer ID {lead_developer_id} not found in SharePoint lead developers data.'
     )
   return None
 
@@ -68,7 +69,7 @@ def process_sc_product_sets(services):
   )
   log_info(f'Found {len(sc_product_sets_data)} product sets in Service Catalogue')
 
-  log_and_append('************** Processing Product Sets *********************')
+  log_info('************** Processing Product Sets *********************')
   for sp_product_set in sp_product_sets_data:
     ps_id = sp_product_set.get('ps_id')
     log_debug(f'Comparing product set {ps_id}')
@@ -79,12 +80,15 @@ def process_sc_product_sets(services):
       continue
 
     sc_product_set = sc_product_sets_dict.get(ps_id, {})
-    if sp_product_set.get('name', '').strip() != sc_product_set.get('name', '').strip():
+    log_debug(f'\ncomparing SC product set {sc_product_set} \nwith SP product set {sp_product_set}')
+    if sp_product_set.get('name', '').strip() != sc_product_set.get('name', '').strip() or sp_product_set.get('lead_developer', '') != sc_product_set.get('lead_developer', ''):
       log_and_append(
         f'Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}'
       )
       sc.update('product-sets', sc_product_set.get('documentId'), sp_product_set)
       change_count += 1
+    else:
+      log_info(f'No changes detected for Product Set ps_id {ps_id}')
 
   # Delete the product sets that no longer exist in Sharepoint
   for sc_product_set in sc_product_sets_data:

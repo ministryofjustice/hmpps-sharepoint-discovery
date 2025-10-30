@@ -70,7 +70,7 @@ def process_sc_service_areas(services):
   change_count = 0
   log_messages = []
   log_info('Processing prepared service area sharepoint data for service catalogue ')
-  log_messages.append('************** Processing Service Areas *********************')
+  log_info('************** Processing Service Areas *********************')
   for sp_service_area in sp_service_areas_data:
     sa_id = sp_service_area.get('sa_id')
 
@@ -84,6 +84,7 @@ def process_sc_service_areas(services):
     # Otherwise do the comparisons
     log_debug(f'Comparing Service Area {sa_id}')
     sc_service_area = sc_service_areas_dict.get(sa_id, {})
+    log_debug(f'\ncomparing SC service area {sc_service_area} \nwith SP service area {sp_service_area}')
     for key in sp_service_area.keys():
       if (
         sa_id in sc_service_areas_dict
@@ -91,14 +92,16 @@ def process_sc_service_areas(services):
         and key in sc_service_area
         and key != 'updated_by_id'
       ):
-        sp_value = sp_service_area.get(key, '').strip()
-        sc_value = sc_service_area.get(key, '').strip()
+        sp_value = str(sp_service_area.get(key, '') or '').strip()
+        sc_value = str(sc_service_area.get(key, '') or '').strip()
         if sp_value != sc_value:
           log_and_append(
             f'Updating Service Areas sa_id {sa_id}({key}) :: {sc_value} -> {sp_value}'
           )
           sc.update('service-areas', sc_service_area.get('documentId'), sp_service_area)
           change_count += 1
+        else:
+          log_info(f'No change for Service Area sa_id {sa_id} ({key})')
 
   # Delete those that no longer exist in Sharepoint
   for sc_service_area in sc_service_areas_data:
