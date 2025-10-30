@@ -1,6 +1,6 @@
 import os
 import re
-import html
+import html 
 from hmpps.services.job_log_handling import (
   log_debug,
   log_error,
@@ -132,11 +132,10 @@ def process_sc_products(services):
   log_debug(
     'Fetching Products, Teams, Products Sets, Service Areas from Service Catalogue'
   )
-  sc_products_data = sc.get_all_records(sc.products_get)
+  sc_products_data = sc.get_all_records(sc.sharepoint_discovery_products_get)
   sc_teams_data = sc.get_all_records('teams')
   sc_product_sets_data = sc.get_all_records('product-sets')
   sc_service_areas_data = sc.get_all_records('service-areas')
-
   # Create the dictionaries
   sc_products_dict = {
     product.get('p_id').strip(): product for product in sc_products_data
@@ -166,13 +165,14 @@ def process_sc_products(services):
   log_info('Processing prepared products sharepoint data for service catalogue ')
   change_count = 0
   log_messages = []
-  log_messages.append('************** Processing Products *********************')
+  log_info('************** Processing Products *********************')
   for sp_product in sp_products_data:
     p_id = sp_product.get('p_id')
     log_debug(f'Comparing Product p_id {p_id} :: {sp_product}')
     if p_id in sc_products_dict:
       try:
         sc_product = sc_products_dict.get(p_id, {})
+        log_debug(f'\nComparing SC product {sc_product} \n with SP product {sp_product}')
         mismatch_flag = False
         for key in list(sp_product.keys()):
           sp_value = clean_value(sp_product.get(key))
@@ -209,7 +209,7 @@ def process_sc_products(services):
 
             if sp_value is not None:
               if (sp_value or '').strip() != (sc_value or '').strip():
-                log_messages.append(
+                log_and_append(
                   f'SC Updating Products p_id {p_id}({key}) :: {sc_value} -> {sp_value}'
                 )
                 log_info(
@@ -221,7 +221,7 @@ def process_sc_products(services):
 
           elif compare_flag and key == 'subproduct':
             if sp_product.get(key) != sc_product.get(key):
-              log_messages.append(
+              log_and_append(
                 f'Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}'
               )
               mismatch_flag = True
@@ -249,7 +249,6 @@ def process_sc_products(services):
             if 'service_area' in sp_product
             else sp_product
           )
-          log_info(f'Updating Product :: p_id {p_id} :: {sc_product} -> {sp_product}')
           sc.update('products', sc_product.get('documentId'), sp_product)
           change_count += 1
       except Exception as e:
@@ -266,11 +265,9 @@ def process_sc_products(services):
   for sc_product in sc_products_data:
     p_id = sc_product.get('p_id').strip()
     if p_id not in sp_products_dict and 'HMPPS' not in p_id and 'DPS999' not in p_id:
-      log_messages.append(f'Deleting product :: {sc_product.get("p_id")}')
-      log_info(f'Deleting product  :: {sc_product.get("p_id")}')
+      log_and_append(f'Deleting product :: {sc_product.get("p_id")}')
       sc.delete('products', sc_product.get('documentId'))
       change_count += 1
 
   log_and_append(f'Products in Service Catalogue processed: {change_count}')
-  log_messages.append('*******************************************************')
   return log_messages
