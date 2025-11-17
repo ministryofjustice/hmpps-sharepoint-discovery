@@ -110,6 +110,7 @@ def extract_sp_products_data(sp):
         ),
         'phase': sp_product.get('fields', {}).get('field_7', None),
         'slack_channel_id': sp_product.get('fields', {}).get('SlackchannelID', None),
+        'portfolio': clean_value(sp_product.get('fields', {}).get('Portfolio', None)),
         # "updated_by_id": 34
       }
       # add the fetched data
