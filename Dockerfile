@@ -11,8 +11,6 @@ COPY processes processes
 RUN chown -R appuser:appgroup /app/classes /app/processes
 COPY --chown=appuser:appgroup  ./sharepoint_discovery.py /app/sharepoint_discovery.py
 
-# update PATH environment variable
-ENV PATH=/home/appuser/.local:/app:$PATH
 USER 2000
 
 CMD [ "uv", "run", "python", "-u", "/app/sharepoint_discovery.py" ]
