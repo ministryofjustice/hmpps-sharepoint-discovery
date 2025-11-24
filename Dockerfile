@@ -8,9 +8,6 @@ RUN uv sync
 # copy the dependencies from builder stage
 COPY classes classes
 COPY processes processes
-RUN chown -R appuser:appgroup /app/classes /app/processes
 COPY --chown=appuser:appgroup  ./sharepoint_discovery.py /app/sharepoint_discovery.py
-
-USER 2000
 
 CMD [ "uv", "run", "python", "-u", "/app/sharepoint_discovery.py" ]
