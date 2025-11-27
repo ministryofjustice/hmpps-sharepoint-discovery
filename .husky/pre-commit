@@ -1,6 +1,10 @@
 #!/bin/bash
 # Run Ruff for Python formatting and enforce no issues before commit
 
+# Download Ruff configuration file from central location 
+RUFF_CONFIG_FILE="$(git rev-parse --show-toplevel)/.ruff.toml"
+curl -o ${RUFF_CONFIG_FILE} https://raw.githubusercontent.com/ministryofjustice/hmpps-sre-python-lib/feat/HEAT-864-2/ruff.toml
+
 # Check staged Python files
 STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep '\.py$')
 
@@ -11,7 +15,7 @@ fi
 
 # Run Ruff to fix issues
 echo "Running Ruff on staged files..."
-ruff check $STAGED_FILES --diff
+ruff check . --config ${RUFF_CONFIG_FILE}
 
 # Check if Ruff found any issues
 if [ $? -ne 0 ]; then
