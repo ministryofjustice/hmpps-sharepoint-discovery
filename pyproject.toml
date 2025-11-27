@@ -10,5 +10,13 @@ dependencies = [
     "hmpps-python-lib",
 ]
 
+[tool.ruff]
+line-length = 88
+select = ["E", "F"]
+
+[tool.ruff.format]
+indent-style = "space"
+
 [tool.uv.sources]
 hmpps-python-lib = { url = "https://github.com/ministryofjustice/hmpps-python-lib/releases/download/v0.1.8/hmpps_python_lib-0.1.8-py3-none-any.whl" }
+
