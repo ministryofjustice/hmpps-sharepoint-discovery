@@ -1,5 +1,5 @@
 # example.py
-import os, sys
+import os, sys, math
 
 def my_function(  x, y ):  # Extra spaces around parameters (E211)
     print(    "Hello, World!" )  # Extra spaces inside parentheses (E201)
