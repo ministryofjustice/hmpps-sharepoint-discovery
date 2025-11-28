@@ -1,4 +1,4 @@
-from hmpps.services.job_log_handling import log_warning, log_error, log_info, log_debug
+from hmpps.services.job_log_handling import log_warning, log_info, log_debug
 import json
 
 
@@ -10,7 +10,8 @@ def find_lead_developer(sp_product_set, sp_lead_developer_dict):
   else:
     product_set_id = sp_product_set.get('fields').get('ProductSetID', 'Unknown')
     log_warning(
-      f'Product Set {product_set_id} Lead Developer ID {lead_developer_id} not found in SharePoint lead developers data.'
+      f'Product Set {product_set_id} Lead Developer ID {lead_developer_id} '
+      'not found in SharePoint lead developers data.'
     )
   return None
 
@@ -80,8 +81,11 @@ def process_sc_product_sets(services):
       continue
 
     sc_product_set = sc_product_sets_dict.get(ps_id, {})
-    log_debug(f'\ncomparing SC product set {sc_product_set} \nwith SP product set {sp_product_set}')
-    if sp_product_set.get('name', '').strip() != sc_product_set.get('name', '').strip() or sp_product_set.get('lead_developer', '') != sc_product_set.get('lead_developer', ''):
+    log_debug(f'\ncomparing SC product set {sc_product_set}'
+               f'\nwith SP product set {sp_product_set}')
+    if (sp_product_set.get('name', '').strip() != sc_product_set.get('name', '').strip()
+        or sp_product_set.get('lead_developer', '') != 
+        sc_product_set.get('lead_developer', '')):
       log_and_append(
         f'Updating product set :: ps_id {ps_id} :: {sc_product_set} -> {sp_product_set}'
       )

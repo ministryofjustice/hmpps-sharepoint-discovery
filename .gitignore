@@ -10,3 +10,4 @@ helm_deploy/hmpps-terraform-discovery/charts/*.tgz
 **/Chart.lock
 __pycache__/
 **/.DS_Store
+.ruff.toml

@@ -76,17 +76,17 @@ class SharePoint:
       if list_item:
         list_id = list_item['id']
         # Make a request to get fields metadata from the specified list
-        fields_url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/{list_id}/columns'
+        fields_url = (
+            f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/'
+            f'{list_id}/columns'
+        )
         fields_response = requests.get(fields_url, headers=self.api_headers)
         if fields_response.status_code == 200:
-          fields_data = fields_response.json()
-          # Filter out invalid field names
-          valid_field_names = [
-            field['name'] for field in fields_data['value'] if 'name' in field
-          ]
-          select_fields = ','.join(valid_field_names)
           # Make a request to get items from the specified list with all fields
-          items_url = f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/{list_id}/items?expand=fields'
+          items_url = (
+            f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/'
+            f'{list_id}/items?expand=fields'
+          )
           items_response = requests.get(items_url, headers=self.api_headers)
           if items_response.status_code == 200:
             items = items_response.json()
@@ -94,11 +94,13 @@ class SharePoint:
             return items
           else:
             log_error(
-              f'Failed to retrieve items from {list_name} list: {items_response.status_code} {items_response.text}'
+              f'Failed to retrieve items from {list_name} list: '
+              f'{items_response.status_code} {items_response.text}'
             )
         else:
           log_error(
-            f'Failed to retrieve fields metadata from {list_name} list: {fields_response.status_code} {fields_response.text}'
+            f'Failed to retrieve fields metadata from {list_name} list: '
+            f'{fields_response.status_code} {fields_response.text}'
           )
       else:
         log_error(f'List {list_name} not found.')

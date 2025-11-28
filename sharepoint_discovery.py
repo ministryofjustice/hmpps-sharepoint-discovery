@@ -1,5 +1,6 @@
 #!/usr/bin/env python
-"""Sharepoint discovery - queries the Sharepoint Graph API for lists of lists and populates service catalogue with the results.
+"""Sharepoint discovery - queries the Sharepoint Graph API for lists of lists 
+  and populates service catalogue with the results.
 
 Required environment variables
 ------------------------------
@@ -25,7 +26,7 @@ Optional environment variables
 
 import os
 
-# hmpps-python-lib
+# hmpps-sre-python-lib
 from hmpps import ServiceCatalogue, Slack
 from hmpps.services.job_log_handling import log_error, log_info, job
 
