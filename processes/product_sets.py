@@ -82,7 +82,7 @@ def process_sc_product_sets(services):
 
     sc_product_set = sc_product_sets_dict.get(ps_id, {})
     log_debug(f'\ncomparing SC product set {sc_product_set}'
-               '\nwith SP product set {sp_product_set}')
+               f'\nwith SP product set {sp_product_set}')
     if (sp_product_set.get('name', '').strip() != sc_product_set.get('name', '').strip()
         or sp_product_set.get('lead_developer', '') != 
         sc_product_set.get('lead_developer', '')):

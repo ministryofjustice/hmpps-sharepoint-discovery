@@ -26,7 +26,7 @@ def fetchID(sp_product, dict, key):
     else:
       log_error(
         f'Product reference key not found for {key} in Service Catalogue :: '
-        '{sp_product[key]}'
+        f'{sp_product[key]}'
       )
       del sp_product[key]
   return sp_product
@@ -75,7 +75,7 @@ def extract_sp_products_data(sp):
   for sp_product in sp.data['Products and Teams Main List'].get('value'):
     log_debug(
       'Extracting SharePoint product data for: '
-      '{sp_product.get("fields", {}).get("ProductID", None)}'
+      f'{sp_product.get("fields", {}).get("ProductID", None)}'
     )
     if sp_product.get('fields').get('DecommissionedProduct', '').upper() == 'YES':
       # Skip the processing if it's decommissioned
@@ -177,7 +177,7 @@ def process_sc_products(services):
       try:
         sc_product = sc_products_dict.get(p_id, {})
         log_debug(f'\nComparing SC product {sc_product}'
-                  ' \n with SP product {sp_product}')
+                  f' \n with SP product {sp_product}')
         mismatch_flag = False
         for key in list(sp_product.keys()):
           sp_value = clean_value(sp_product.get(key))

@@ -86,7 +86,7 @@ def process_sc_service_areas(services):
     log_debug(f'Comparing Service Area {sa_id}')
     sc_service_area = sc_service_areas_dict.get(sa_id, {})
     log_debug(f'\ncomparing SC service area {sc_service_area}'
-      '\nwith SP service area {sp_service_area}')
+      f'\nwith SP service area {sp_service_area}')
     for key in sp_service_area.keys():
       if (
         sa_id in sc_service_areas_dict
