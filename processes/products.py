@@ -25,7 +25,8 @@ def fetchID(sp_product, dict, key):
       sp_product[key] = dict[parent_key]['documentId']
     else:
       log_error(
-        f'Product reference key not found for {key} in Service Catalogue :: {sp_product[key]}'
+        f'Product reference key not found for {key} in Service Catalogue :: '
+        '{sp_product[key]}'
       )
       del sp_product[key]
   return sp_product
@@ -73,12 +74,14 @@ def extract_sp_products_data(sp):
   sp_products_data = []
   for sp_product in sp.data['Products and Teams Main List'].get('value'):
     log_debug(
-      f'Extracting SharePoint product data for: {sp_product.get("fields", {}).get("ProductID", None)}'
+      'Extracting SharePoint product data for: '
+      '{sp_product.get("fields", {}).get("ProductID", None)}'
     )
     if sp_product.get('fields').get('DecommissionedProduct', '').upper() == 'YES':
       # Skip the processing if it's decommissioned
       log_info(
-        f'Skipping {sp_product.get("fields", {}).get("ProductID", None)} (decommissioned) ...'
+        f'Skipping {sp_product.get("fields", {}).get("ProductID", None)}'
+         ' (decommissioned) ...'
       )
       continue
 
@@ -88,7 +91,7 @@ def extract_sp_products_data(sp):
         log_error(f'Invalid name format for product_id: {product_id}')
 
       if not re.match(
-        r'^[A-Z]{3,4}[0-9]{0,5}$', sp_product.get('fields', {}).get('ProductID')
+        r'^[A-Z]{3,5}[0-9]{0,5}$', sp_product.get('fields', {}).get('ProductID')
       ):
         log_error(f'Invalid productId format for product_id: {product_id}')
 
@@ -173,7 +176,8 @@ def process_sc_products(services):
     if p_id in sc_products_dict:
       try:
         sc_product = sc_products_dict.get(p_id, {})
-        log_debug(f'\nComparing SC product {sc_product} \n with SP product {sp_product}')
+        log_debug(f'\nComparing SC product {sc_product}'
+                  ' \n with SP product {sp_product}')
         mismatch_flag = False
         for key in list(sp_product.keys()):
           sp_value = clean_value(sp_product.get(key))
