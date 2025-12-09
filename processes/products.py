@@ -129,7 +129,7 @@ def extract_sp_products_data(sp):
             .get('DecommissionedProduct', ''))
             .strip().lower() == 'yes' else False if str(sp_product.get('fields', {})
             .get('DecommissionedProduct', ''))
-            .strip().lower() == 'no' else None
+            .strip().lower() == 'no' else False
         ),
         'decommissioned_date': format_date(
           sp_product.get('fields', {}).get('DecommissionedEndDate', None)
@@ -262,8 +262,8 @@ def process_sc_products(services):
               del sp_product[key]
           elif compare_flag and key == 'decommissioned':
             sp_value = sp_product.get(key)
-            sc_value = sc_product.get(key)
-            if sp_value != (sc_value if sc_value is not None else False):
+            sc_value = sc_product.get(key) if sc_product.get(key) is not None else False
+            if sp_value != sc_value:
               log_and_append(
                 f'Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}'
               )
