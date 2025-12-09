@@ -1,6 +1,7 @@
 import os
 import re
 import html 
+from datetime import datetime
 from hmpps.services.job_log_handling import (
   log_debug,
   log_error,
@@ -57,8 +58,21 @@ def link_product_data(sp, sp_product):
       'ProductManagerName',
     ),
     ('lead_developer', 'LeadDeveloperLookupId', 'Lead Developers', 'Title'),
+    (
+      'technical_architect', 
+      'TechnicalArchitectLookupId', 
+      'Technical Architects', 
+      'TechnicalArchitectName'
+    ),
+    (
+      'principal_architect', 
+      'OversightPrincipalTechnicalArchiLookupId', 
+      'Technical Architects', 
+      'TechnicalArchitectName'
+    ),
   ]
   for field in fields:
+
     if field_id := sp_product.get('fields', {}).get(field[1]):
       product_data[field[0]] = (
         sp.dict[field[2]].get(field_id, {}).get('fields', {}).get(field[3], None)
@@ -77,13 +91,6 @@ def extract_sp_products_data(sp):
       'Extracting SharePoint product data for: '
       f'{sp_product.get("fields", {}).get("ProductID", None)}'
     )
-    if sp_product.get('fields').get('DecommissionedProduct', '').upper() == 'YES':
-      # Skip the processing if it's decommissioned
-      log_info(
-        f'Skipping {sp_product.get("fields", {}).get("ProductID", None)}'
-         ' (decommissioned) ...'
-      )
-      continue
 
     product_id = sp_product.get('fields', {}).get('ProductID', None)
     if product_id:
@@ -114,6 +121,19 @@ def extract_sp_products_data(sp):
         'phase': sp_product.get('fields', {}).get('field_7', None),
         'slack_channel_id': sp_product.get('fields', {}).get('SlackchannelID', None),
         'portfolio': clean_value(sp_product.get('fields', {}).get('Portfolio', None)),
+        'business_owner': clean_value(
+          sp_product.get('fields', {}).get('HMPPSBusinessOwner', None)
+        ),
+        'decommissioned': clean_value(
+            True if str(sp_product.get('fields', {})
+            .get('DecommissionedProduct', ''))
+            .strip().lower() == 'yes' else False if str(sp_product.get('fields', {})
+            .get('DecommissionedProduct', ''))
+            .strip().lower() == 'no' else None
+        ),
+        'decommissioned_date': format_date(
+          sp_product.get('fields', {}).get('DecommissionedEndDate', None)
+        ),
         # "updated_by_id": 34
       }
       # add the fetched data
@@ -121,6 +141,15 @@ def extract_sp_products_data(sp):
       sp_products_data.append(sp_product_data)
   return sp_products_data
 
+def format_date(date_str):
+  if not date_str:
+    return None
+  try:
+    # Parse the date string and convert to 'DD/MM/YYYY'
+    return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
+  except ValueError:
+    log_error(f"Invalid date format: {date_str}")
+    return None
 
 def process_sc_products(services):
   def log_and_append(message):
@@ -159,8 +188,6 @@ def process_sc_products(services):
   # Sharepoint data processing
   sp_products_data = extract_sp_products_data(sp)
 
-  sp_products_dict = {product.get('p_id'): product for product in sp_products_data}
-
   # Quick summary before we start
   log_info(f'Found {len(sp_products_data)} products in SharePoint (after processing)')
   log_info(f'Found {len(sc_products_data)} products in Service Catalogue')
@@ -189,6 +216,7 @@ def process_sc_products(services):
             compare_flag
             and key != 'updated_by_id'
             and key != 'subproduct'
+            and key != 'decommissioned'
             and key != 'p_id'
           ):
             if (
@@ -232,6 +260,16 @@ def process_sc_products(services):
               mismatch_flag = True
             else:
               del sp_product[key]
+          elif compare_flag and key == 'decommissioned':
+            sp_value = sp_product.get(key)
+            sc_value = sc_product.get(key)
+            if sp_value != (sc_value if sc_value is not None else False):
+              log_and_append(
+                f'Updating Products p_id {p_id}({key}) :: {sp_value} -> {sc_value}'
+              )
+              mismatch_flag = True
+            else:
+              del sp_product[key]
 
         if mismatch_flag:
           sp_product = (
@@ -265,13 +303,6 @@ def process_sc_products(services):
       sp_product = fetchID(sp_product, sc_service_area_name_dict, 'service_area')
       log_and_append(f'Adding Product :: {sp_product}')
       sc.add('products', sp_product)
-      change_count += 1
-
-  for sc_product in sc_products_data:
-    p_id = sc_product.get('p_id').strip()
-    if p_id not in sp_products_dict and 'HMPPS' not in p_id and 'DPS999' not in p_id:
-      log_and_append(f'Deleting product :: {sc_product.get("p_id")}')
-      sc.delete('products', sc_product.get('documentId'))
       change_count += 1
 
   log_and_append(f'Products in Service Catalogue processed: {change_count}')

@@ -11,6 +11,8 @@ def fetch_sp_teams_data(sp_teams):
       sp_team_data = {
         't_id': team_id,
         'name': sp_team.get('fields').get('Team'),
+        'budget_code': sp_team.get('fields').get('BudgetCode'),
+        'confluence_link': sp_team.get('fields').get('ConfluenceLink'),
         # "description": "n/a",  field not available in SC
         # "slack_channel": "n/a", Not populated so commenting out
         # "updated_by_id": 34 Not working in strapi5
@@ -55,20 +57,34 @@ def process_sc_teams(services):
 
   for sp_team in sp_teams_data:
     t_id = sp_team.get('t_id')
-    log_info(f'Comparing team {t_id} from SharePoint')
-
-    # Add or update teams in Service Catalogue
-    if t_id in sc_teams_dict:
-      sc_team = sc_teams_dict.get(t_id, {})
-      log_debug(f'\nComparing SC team {sc_team} \nwith SP team {sp_team}')
-      if sp_team['name'].strip() != sc_team.get('name').strip():
-        log_and_append(f'Updating Team ::  t_id {t_id} :: {sc_team} -> {sp_team}')
-        sc.update('teams', sc_team.get('documentId'), sp_team)
-        change_count += 1
-    else:
-      log_and_append(f'Adding team :: {sp_team.get("name")}')
+    
+    # If the record doesn't exist in service catalogue, add it and continue
+    if not sc_teams_dict.get(t_id):
+      log_and_append(f'Adding Team :: {sp_team}')
       sc.add('teams', sp_team)
       change_count += 1
+      continue
+
+    # Otherwise do the comparisons
+    log_info(f'Comparing team {t_id} from SharePoint')
+    sc_team = sc_teams_dict.get(t_id, {})
+    # Add or update teams in Service Catalogue
+    for key in sp_team.keys():
+      if (
+        t_id in sc_teams_dict
+        and key in sp_team
+        and key in sc_team
+      ):
+        sp_value = str(sp_team.get(key, '') or '').strip()
+        sc_value = str(sc_team.get(key, '') or '').strip()
+        if sp_value != sc_value:
+          log_and_append(
+            f'Updating Team t_id {t_id}({key}) :: {sc_value} -> {sp_value}'
+          )
+          sc.update('teams', sc_team.get('documentId'), sp_team)
+          change_count += 1
+    else:
+      log_info(f'No change for Team t_id {t_id} ({key})')
 
   # Delete the teams that no longer exist in Sharepoint
   for sc_team in sc_teams_data:
