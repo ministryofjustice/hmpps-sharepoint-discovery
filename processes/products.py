@@ -15,7 +15,7 @@ def clean_value(value):
   if value is None:
     return None
   if isinstance(value, str):
-    return html.unescape(value).strip()  # Decode HTML entities and strip whitespace
+    return html.unescape(value).strip()
   return value
 
 
@@ -126,10 +126,9 @@ def extract_sp_products_data(sp):
         ),
         'decommissioned': clean_value(
             True if str(sp_product.get('fields', {})
-            .get('DecommissionedProduct', ''))
-            .strip().lower() == 'yes' else False if str(sp_product.get('fields', {})
-            .get('DecommissionedProduct', ''))
-            .strip().lower() == 'no' else False
+            .get('DecommissionedProduct', '')).strip().lower() == 'yes' else
+            False if str(sp_product.get('fields', {})
+            .get('DecommissionedProduct', '')).strip().lower() == 'no' else False
         ),
         'decommissioned_date': format_date(
           sp_product.get('fields', {}).get('DecommissionedEndDate', None)
