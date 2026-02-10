@@ -24,8 +24,6 @@ Optional environment variables
 
 """
 
-import os
-
 # hmpps-sre-python-lib
 from hmpps import ServiceCatalogue, Slack
 from hmpps.services.job_log_handling import log_error, log_info, job
