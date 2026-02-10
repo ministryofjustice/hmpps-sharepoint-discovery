@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Sharepoint discovery - queries the Sharepoint Graph API for lists of lists 
+"""Sharepoint discovery - queries the Sharepoint Graph API for lists of lists
   and populates service catalogue with the results.
 
 Required environment variables
@@ -41,10 +41,10 @@ import processes.products as products
 
 
 class Services:
-  def __init__(self, sc_params, sp_params, slack_params):
-    self.slack = Slack(slack_params)
-    self.sc = ServiceCatalogue(sc_params)
-    self.sp = SharePoint(sp_params)
+  def __init__(self):
+    self.slack = Slack()
+    self.sc = ServiceCatalogue()
+    self.sp = SharePoint()
 
 
 def log_info_u(message):
@@ -52,6 +52,7 @@ def log_info_u(message):
   log_info(message)
   log_info(f'{"=" * len(message)}')
   log_info('')
+
 
 def should_send_slack_notification(processed_messages):
   for message in processed_messages:
@@ -67,30 +68,12 @@ def should_send_slack_notification(processed_messages):
           continue
   return False  # All categories have 0 processed
 
+
 def main():
   #### Create resources ####
-  # service catalogue parameters
-  sc_params = {
-    'url': os.getenv('SERVICE_CATALOGUE_API_ENDPOINT'),
-    'key': os.getenv('SERVICE_CATALOGUE_API_KEY'),
-    'filter': os.getenv('SC_FILTER', ''),
-  }
 
-  # Sharepoint parameters
-  sp_params = {
-    'az_tenant_id': os.getenv('AZ_TENANT_ID'),
-    'sp_client_id': os.getenv('SP_CLIENT_ID'),
-    'sp_client_secret': os.getenv('SP_CLIENT_SECRET'),
-    'sp_site_id': os.getenv('SP_SITE_ID'),
-  }
-  # Slack parameters
-  slack_params = {
-    'token': os.getenv('SLACK_BOT_TOKEN'),
-    'notify_channel': os.getenv('SLACK_NOTIFY_CHANNEL', ''),
-    'alert_channel': os.getenv('SLACK_ALERT_CHANNEL', ''),
-  }
   job.name = 'hmpps-sharepoint-discovery'
-  services = Services(sc_params, sp_params, slack_params)
+  services = Services()
   sc = services.sc
   slack = services.slack
   sp = services.sp
