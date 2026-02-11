@@ -1,5 +1,6 @@
 import requests
 import json
+import os
 from azure.identity import ClientSecretCredential
 from hmpps.services.job_log_handling import (
   log_debug,
@@ -10,15 +11,18 @@ from hmpps.services.job_log_handling import (
 
 
 class SharePoint:
-  def __init__(self, params):
+  def __init__(
+    self, az_tenant_id='', sp_client_id='', sp_client_secret='', sp_site_id=''
+  ):
     # default variables
     # page_size = 10
     # pagination_page_size = f'&pagination[pageSize]={page_size}'
 
-    self.az_tenant_id = params['az_tenant_id']
-    self.sp_client_id = params['sp_client_id']
-    self.sp_client_secret = params['sp_client_secret']
-    self.sp_site_id = params['sp_site_id']
+    self.az_tenant_id = az_tenant_id or os.getenv('AZ_TENANT_ID', '')
+    self.sp_client_id = sp_client_id or os.getenv('SP_CLIENT_ID', '')
+    self.sp_client_secret = sp_client_secret or os.getenv('SP_CLIENT_SECRET', '')
+    self.sp_site_id = sp_site_id or os.getenv('SP_SITE_ID', '')
+
     try:
       credential = ClientSecretCredential(
         self.az_tenant_id, self.sp_client_id, self.sp_client_secret
@@ -77,8 +81,8 @@ class SharePoint:
         list_id = list_item['id']
         # Make a request to get fields metadata from the specified list
         fields_url = (
-            f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/'
-            f'{list_id}/columns'
+          f'https://graph.microsoft.com/v1.0/sites/{self.sp_site_id}/lists/'
+          f'{list_id}/columns'
         )
         fields_response = requests.get(fields_url, headers=self.api_headers)
         if fields_response.status_code == 200:
