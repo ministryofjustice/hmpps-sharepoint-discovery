@@ -67,8 +67,8 @@ def link_product_data(sp, sp_product):
     (
       'principal_architect', 
       'OversightPrincipalTechnicalArchiLookupId', 
-      'Technical Architects', 
-      'TechnicalArchitectName'
+      'Principal Technical Architect',
+      'PrincipalTechnicalArchitectName'
     ),
   ]
   for field in fields:
