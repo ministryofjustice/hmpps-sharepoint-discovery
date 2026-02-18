@@ -130,6 +130,7 @@ class SharePoint:
       'Lead Developers',
       'Products and Teams Main List',
       'Technical Architects',
+      'Principal Technical Architect',
     ]
     for sp_list in sp_lists:
       if loaded_list := self.get_sharepoint_lists(sp_list):
