@@ -1,5 +1,8 @@
 FROM ghcr.io/ministryofjustice/hmpps-python:python3.13-alpine AS base
 
+# Add git for pulling uv packages
+RUN apk add --no-cache git
+
 # initialise uv
 COPY pyproject.toml .
 RUN uv sync
