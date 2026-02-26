@@ -57,7 +57,7 @@ def process_sc_teams(services):
 
   for sp_team in sp_teams_data:
     t_id = sp_team.get('t_id')
-    
+
     # If the record doesn't exist in service catalogue, add it and continue
     if not sc_teams_dict.get(t_id):
       log_and_append(f'Adding Team :: {sp_team}')
@@ -70,11 +70,7 @@ def process_sc_teams(services):
     sc_team = sc_teams_dict.get(t_id, {})
     # Add or update teams in Service Catalogue
     for key in sp_team.keys():
-      if (
-        t_id in sc_teams_dict
-        and key in sp_team
-        and key in sc_team
-      ):
+      if t_id in sc_teams_dict and key in sp_team and key in sc_team:
         sp_value = str(sp_team.get(key, '') or '').strip()
         sc_value = str(sc_team.get(key, '') or '').strip()
         if sp_value != sc_value:
@@ -83,8 +79,8 @@ def process_sc_teams(services):
           )
           sc.update('teams', sc_team.get('documentId'), sp_team)
           change_count += 1
-    else:
-      log_info(f'No change for Team t_id {t_id} ({key})')
+        else:
+          log_debug(f'No change for Team t_id {t_id} key ({key})')
 
   # Delete the teams that no longer exist in Sharepoint
   for sc_team in sc_teams_data:

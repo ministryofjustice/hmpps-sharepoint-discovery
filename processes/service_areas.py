@@ -61,10 +61,8 @@ def process_sc_service_areas(services):
   log_debug('Lookup dictionaries created successfully.')
 
   # Quick summary before we start
-  service_area_sp_count = len(sp.data["Service Areas"].get("value", []))
-  log_info(
-    f'Found {service_area_sp_count} service areas in Sharepoint'
-  )
+  service_area_sp_count = len(sp.data['Service Areas'].get('value', []))
+  log_info(f'Found {service_area_sp_count} service areas in Sharepoint')
   log_info(f'Found {len(sc_service_areas_data)} service areas in Service Catalogue')
 
   # Compare and update sp_service_area_data
@@ -85,8 +83,10 @@ def process_sc_service_areas(services):
     # Otherwise do the comparisons
     log_debug(f'Comparing Service Area {sa_id}')
     sc_service_area = sc_service_areas_dict.get(sa_id, {})
-    log_debug(f'\ncomparing SC service area {sc_service_area}'
-      f'\nwith SP service area {sp_service_area}')
+    log_debug(
+      f'\ncomparing SC service area {sc_service_area}'
+      f'\nwith SP service area {sp_service_area}'
+    )
     for key in sp_service_area.keys():
       if (
         sa_id in sc_service_areas_dict
@@ -103,7 +103,7 @@ def process_sc_service_areas(services):
           sc.update('service-areas', sc_service_area.get('documentId'), sp_service_area)
           change_count += 1
         else:
-          log_info(f'No change for Service Area sa_id {sa_id} ({key})')
+          log_debug(f'No change for Service Area sa_id {sa_id} ({key})')
 
   # Delete those that no longer exist in Sharepoint
   for sc_service_area in sc_service_areas_data:
