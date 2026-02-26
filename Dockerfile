@@ -6,7 +6,6 @@ RUN uv sync
 
 # create the /app/trivy directory f
 # copy the dependencies from builder stage
-COPY classes classes
 COPY processes processes
 COPY --chown=appuser:appgroup  ./sharepoint_discovery.py /app/sharepoint_discovery.py
 
