@@ -1,6 +1,6 @@
 import os
 import re
-import html 
+import html
 from datetime import datetime
 from hmpps.services.job_log_handling import (
   log_debug,
@@ -59,20 +59,19 @@ def link_product_data(sp, sp_product):
     ),
     ('lead_developer', 'LeadDeveloperLookupId', 'Lead Developers', 'Title'),
     (
-      'technical_architect', 
-      'TechnicalArchitectLookupId', 
-      'Technical Architects', 
-      'TechnicalArchitectName'
+      'technical_architect',
+      'TechnicalArchitectLookupId',
+      'Technical Architects',
+      'TechnicalArchitectName',
     ),
     (
-      'principal_architect', 
-      'OversightPrincipalTechnicalArchiLookupId', 
-      'Technical Architects', 
-      'TechnicalArchitectName'
+      'principal_architect',
+      'OversightPrincipalTechnicalArchiLookupId',
+      'Principal Technical Architect',
+      'PrincipalTechnicalArchitectName',
     ),
   ]
   for field in fields:
-
     if field_id := sp_product.get('fields', {}).get(field[1]):
       product_data[field[0]] = (
         sp.dict[field[2]].get(field_id, {}).get('fields', {}).get(field[3], None)
@@ -125,10 +124,17 @@ def extract_sp_products_data(sp):
           sp_product.get('fields', {}).get('HMPPSBusinessOwner', None)
         ),
         'decommissioned': clean_value(
-            True if str(sp_product.get('fields', {})
-            .get('DecommissionedProduct', '')).strip().lower() == 'yes' else
-            False if str(sp_product.get('fields', {})
-            .get('DecommissionedProduct', '')).strip().lower() == 'no' else False
+          True
+          if str(sp_product.get('fields', {}).get('DecommissionedProduct', ''))
+          .strip()
+          .lower()
+          == 'yes'
+          else False
+          if str(sp_product.get('fields', {}).get('DecommissionedProduct', ''))
+          .strip()
+          .lower()
+          == 'no'
+          else False
         ),
         'decommissioned_date': format_date(
           sp_product.get('fields', {}).get('DecommissionedEndDate', None)
@@ -140,6 +146,7 @@ def extract_sp_products_data(sp):
       sp_products_data.append(sp_product_data)
   return sp_products_data
 
+
 def format_date(date_str):
   if not date_str:
     return None
@@ -147,8 +154,9 @@ def format_date(date_str):
     # Parse the date string and convert to 'DD/MM/YYYY'
     return datetime.strptime(date_str, '%Y-%m-%dT%H:%M:%SZ').strftime('%Y-%m-%d')
   except ValueError:
-    log_error(f"Invalid date format: {date_str}")
+    log_error(f'Invalid date format: {date_str}')
     return None
+
 
 def process_sc_products(services):
   def log_and_append(message):
@@ -202,8 +210,9 @@ def process_sc_products(services):
     if p_id in sc_products_dict:
       try:
         sc_product = sc_products_dict.get(p_id, {})
-        log_debug(f'\nComparing SC product {sc_product}'
-                  f' \n with SP product {sp_product}')
+        log_debug(
+          f'\nComparing SC product {sc_product} \n with SP product {sp_product}'
+        )
         mismatch_flag = False
         for key in list(sp_product.keys()):
           sp_value = clean_value(sp_product.get(key))
