@@ -273,13 +273,13 @@ dependencies = [
 requires-dist = [
     { name = "azure-identity", specifier = "==1.25.2" },
     { name = "dockerfile-parse", specifier = "==2.0.1" },
-    { name = "hmpps-sre-python-lib", git = "https://github.com/ministryofjustice/hmpps-sre-python-lib.git?rev=feat%2Fsharepoint_class" },
+    { name = "hmpps-sre-python-lib", url = "https://github.com/ministryofjustice/hmpps-sre-python-lib/releases/download/v1.1.0/hmpps_sre_python_lib-1.1.0-py3-none-any.whl" },
 ]
 
 [[package]]
 name = "hmpps-sre-python-lib"
 version = "1.1.0"
-source = { git = "https://github.com/ministryofjustice/hmpps-sre-python-lib.git?rev=feat%2Fsharepoint_class#07a32e446269090dc17ac597f41375ea62070c26" }
+source = { url = "https://github.com/ministryofjustice/hmpps-sre-python-lib/releases/download/v1.1.0/hmpps_sre_python_lib-1.1.0-py3-none-any.whl" }
 dependencies = [
     { name = "flask" },
     { name = "gitpython" },
@@ -290,6 +290,22 @@ dependencies = [
     { name = "requests" },
     { name = "slack-sdk" },
     { name = "urllib3" },
+]
+wheels = [
+    { url = "https://github.com/ministryofjustice/hmpps-sre-python-lib/releases/download/v1.1.0/hmpps_sre_python_lib-1.1.0-py3-none-any.whl", hash = "sha256:f66e3b135a89f1676d92a252599870e34b55d0867391c5a5e3959832649079c9" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "flask", specifier = ">=3.1.2" },
+    { name = "gitpython", specifier = ">=3.1.0" },
+    { name = "office365-rest-python-client", specifier = ">=2.6.2" },
+    { name = "pygithub", specifier = ">=2.6.1" },
+    { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pyyaml", specifier = "==6.0.3" },
+    { name = "requests", specifier = ">=2.32.5" },
+    { name = "slack-sdk", specifier = ">=3.36.0" },
+    { name = "urllib3", specifier = ">=2.6.0" },
 ]
 
 [[package]]
