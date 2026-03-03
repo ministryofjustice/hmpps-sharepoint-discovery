@@ -124,7 +124,10 @@ def extract_sp_products_data(sp):
           sp_product.get('fields', {}).get('HMPPSBusinessOwner', None)
         ),
         'decommissioned': clean_value(
-     str(sp_product.get('fields', {}).get('DecommissionedProduct', '')).strip().lower() == 'yes'
+          str(sp_product.get('fields', {}).get('DecommissionedProduct', ''))
+          .strip()
+          .lower()
+          == 'yes'
         ),
         'decommissioned_date': format_date(
           sp_product.get('fields', {}).get('DecommissionedEndDate', None)
