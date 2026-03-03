@@ -25,11 +25,8 @@ Optional environment variables
 """
 
 # hmpps-sre-python-lib
-from hmpps import ServiceCatalogue, Slack
+from hmpps import ServiceCatalogue, Slack, SharePoint
 from hmpps.services.job_log_handling import log_error, log_info, job
-
-# local classes for the various parts of the script
-from classes.sharepoint import SharePoint
 
 # Components
 import processes.teams as teams
@@ -42,7 +39,7 @@ class Services:
   def __init__(self):
     self.slack = Slack()
     self.sc = ServiceCatalogue()
-    self.sp = SharePoint()
+    self.sp = SharePoint(site_name='PrisonsDigital-DeliveryOperations')
 
 
 def log_info_u(message):
@@ -91,6 +88,20 @@ def main():
       '*Sharepoint Discovery failed*: Unable to connect to Sharepoint Graph API'
     )
     raise SystemExit()
+
+  sp_lists = [
+    'Service Areas',
+    'Product Set',
+    'Teams',
+    'Service Owners',
+    'Product Managers',
+    'Delivery Managers',
+    'Lead Developers',
+    'Products and Teams Main List',
+    'Technical Architects',
+    'Principal Technical Architect',
+  ]
+  sp.load_sharepoint_lists(sp_lists)
 
   try:
     # Process Teams
