@@ -102,7 +102,8 @@ def extract_sp_products_data(sp):
       # Check for a valid (non-empty) product name - otherwise skip it
       if not product_name:
         log_warning(
-          f'Invalid name format for product_id: {product_id} ({product_name}) - ignoring it.'
+          f'Invalid name format for product_id: {product_id} ({product_name}'
+          f' - ignoring it.'
         )
         continue
 
