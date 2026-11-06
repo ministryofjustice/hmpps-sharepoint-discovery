@@ -11,6 +11,24 @@ The job reads SharePoint lists and creates/updates/deletes records in Service Ca
 
 It also sends Slack notifications when records are processed.
 
+## Product Slack channels
+
+The SharePoint `SlackchannelID` value may contain a channel ID or name.
+Discovery resolves its counterpart and stores `name|ID` in the Service Catalogue
+`slack_channel_id` field. Surrounding whitespace is stripped; unresolved parts use
+`none` (`name|none` or `none|ID`). Empty source values clear the field.
+
+Resolution runs before comparison on every run, including for new products, so
+channel renames are detected even when SharePoint has not changed. The
+`slack_channel_name` field is not read or written. Consumers must parse the combined
+value; removing the old field from the Service Catalogue schema is a separate change.
+Products absent from SharePoint are not enriched.
+
+The Slack bot requires `channels:read` and `groups:read` for channel lookups.
+Private channels are only accessible where the bot has been added.
+
+Run the unit tests with `uv run python -m unittest discover -s tests`.
+
 ## What This Job Processes
 
 The job loads these SharePoint lists:
