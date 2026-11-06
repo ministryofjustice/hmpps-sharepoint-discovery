@@ -12,6 +12,28 @@ from hmpps.services.job_log_handling import (
 log_level = os.environ.get('LOG_LEVEL', 'INFO').upper()
 
 
+def resolve_slack_channel(slack, channel):
+  if channel is None:
+    return ''
+  if not isinstance(channel, str):
+    log_warning(f'Unable to resolve Slack channel from value {channel!r}')
+    return 'none|none'
+
+  channel = channel.strip()
+  if not channel:
+    return ''
+
+  counterpart = slack.get_slack_channel_counterpart(channel) or 'none'
+  if re.fullmatch(r'[CG][A-Z0-9]{8,}', channel):
+    resolved = f'{counterpart}|{channel}'
+  else:
+    resolved = f'{channel.lstrip("#")}|{counterpart}'
+
+  if counterpart == 'none':
+    log_warning(f'Unable to fully resolve Slack channel value {channel!r}')
+  return resolved
+
+
 def clean_value(value):
   if value is None:
     return None
@@ -208,6 +230,9 @@ def process_sc_products(services):
   log_messages = []
   log_info('************** Processing Products *********************')
   for sp_product in sp_products_data:
+    sp_product['slack_channel_id'] = resolve_slack_channel(
+      services.slack, sp_product.get('slack_channel_id')
+    )
     p_id = sp_product.get('p_id')
     log_debug(f'Comparing Product p_id {p_id} :: {sp_product}')
     if p_id in sc_products_dict:
@@ -221,7 +246,7 @@ def process_sc_products(services):
           sp_value = clean_value(sp_product.get(key))
           sc_value = None
           compare_flag = False
-          if key in sp_product and key in sc_product:
+          if key in sc_product or key == 'slack_channel_id':
             compare_flag = True
           if (
             compare_flag
